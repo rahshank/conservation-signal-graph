@@ -176,7 +176,12 @@ export function App() {
             <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
             <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
             <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={state.metrics.extractionMode} />
-            <DetailItem icon={<Link size={15} />} label="Source URL" value={latest.source.imageUrl ? displayUrl(latest.source.imageUrl) : "Fixture asset"} />
+            <DetailItem
+              icon={<Link size={15} />}
+              label="Source URL"
+              value={latest.source.imageUrl ?? "Fixture asset"}
+              href={latest.source.imageUrl}
+            />
           </dl>
 
           <section className="frameProcessing" aria-label="Frame processing metadata">
@@ -216,11 +221,11 @@ export function App() {
   );
 }
 
-function DetailItem({ icon, label, value }: { icon?: ReactNode; label: string; value: string }) {
+function DetailItem({ icon, label, value, href }: { icon?: ReactNode; label: string; value: string; href?: string }) {
   return (
     <div>
       <dt>{icon}{label}</dt>
-      <dd>{value}</dd>
+      <dd>{href ? <a href={href}>{value}</a> : value}</dd>
     </div>
   );
 }

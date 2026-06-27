@@ -14,8 +14,13 @@ test("dashboard renders seeded signal graph and can ingest another event", async
   await expect(runDetails.getByText("Prompt", { exact: true })).toBeVisible();
   await expect(runDetails.getByText("csg-v0.1")).toBeVisible();
   await expect(runDetails.getByText("Validation", { exact: true })).toBeVisible();
+  await expect(runDetails.locator(".detailGrid > div", { hasText: "Validation" }).getByText("fixture", { exact: true })).toBeVisible();
   await expect(runDetails.getByText("Extraction mode", { exact: true })).toBeVisible();
+  await expect(runDetails.getByText("memory", { exact: true })).toBeVisible();
   await expect(runDetails.getByText("Graph mode", { exact: true })).toBeVisible();
+  await expect(runDetails.getByText("74%")).toBeVisible();
+  await expect(runDetails.getByText("18 ms")).toBeVisible();
+  await expect(runDetails.getByText("Fixture asset")).toBeVisible();
   await expect(runDetails.getByRole("heading", { name: "Frame Processing" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Context Graph" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible();
@@ -44,6 +49,7 @@ test("dashboard renders frame normalization metadata from model runs", async ({ 
       reason: "oversized_dimensions"
     }
   };
+  state.events[0].source.imageUrl = "https://www.nps.gov/common/uploads/cropped_image/example.jpg?version=20260627#frame";
   state.metrics.extractionMode = "groq";
 
   await page.route("**/api/state", async (route) => {
@@ -51,6 +57,19 @@ test("dashboard renders frame normalization metadata from model runs", async ({ 
   });
 
   await page.goto("/");
+
+  const runDetails = page.getByLabel("Model run details");
+  await expect(runDetails.getByText("meta-llama/llama-4-scout-17b-16e-instruct")).toBeVisible();
+  await expect(runDetails.getByText("1352 ms")).toBeVisible();
+  await expect(runDetails.getByText("valid", { exact: true })).toBeVisible();
+  await expect(runDetails.getByText("74%")).toBeVisible();
+  await expect(runDetails.getByText("memory", { exact: true })).toBeVisible();
+  await expect(runDetails.getByText("groq", { exact: true })).toBeVisible();
+  const exactSourceLink = runDetails.getByRole("link", {
+    name: "https://www.nps.gov/common/uploads/cropped_image/example.jpg?version=20260627#frame"
+  });
+  await expect(exactSourceLink).toBeVisible();
+  await expect(exactSourceLink).toHaveAttribute("href", "https://www.nps.gov/common/uploads/cropped_image/example.jpg?version=20260627#frame");
 
   const frameMetadata = page.getByLabel("Frame processing metadata");
   await expect(frameMetadata.getByText("4267 x 2400")).toBeVisible();
