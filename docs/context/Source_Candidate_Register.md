@@ -61,7 +61,7 @@ The Channel Islands nest cams are now the best proof set for model extraction qu
 
 | Source | Expected context | Groq result | Product finding |
 | --- | --- | --- | --- |
-| Peregrine Falcon Webcam | Peregrine falcon / nest camera | Identified Peregrine Falcon with 0.9 confidence through product image normalization | Strong known-context benchmark; raw image exceeded Groq pixel limit |
+| Peregrine Falcon Webcam | Peregrine falcon / nest camera | Identified Peregrine Falcon with 0.99 confidence through product image normalization | Strong known-context benchmark; raw image exceeded Groq pixel limit |
 | Bald Eagle Webcam (Sauces Canyon Nest) | Bald eagle / nest camera | Identified Bald Eagle and eaglet in nest through product image normalization | Strong known-context benchmark; useful for action and question generation |
 
 Image normalization is now implemented in the product path before Groq vision calls.

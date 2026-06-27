@@ -37,7 +37,7 @@ The image URL is the machine-readable frame. The source page is for human review
 ## 2. Image Normalization
 Some source images are too large for Groq vision input. The bird-cam proof exposed this with an 8640 x 5760 peregrine image.
 
-The pipeline now normalizes source frames before Groq inference. It fetches the image, reads its dimensions and byte size, preserves the original source URL, and submits a resized JPEG when the original frame exceeds the model limits. Each observation records the original dimensions, submitted dimensions, submitted byte size, and whether resizing happened.
+The pipeline now normalizes source frames before Groq inference. It accepts images only from trusted HTTPS hosts, fetches the image with redirect blocking, reads its dimensions and byte size, preserves the original source URL, and submits a resized JPEG when the original frame exceeds the model limits. Each observation records the original dimensions, submitted dimensions, submitted byte size, and whether resizing happened.
 
 This keeps the source traceable while giving the model an image it can accept.
 
@@ -131,6 +131,7 @@ The project has passed:
 The next implementation step is to surface model-run and frame-normalization details in the UI before Neo4j persistence.
 
 ## Change Log
+- 2026-06-27: Added the trusted-host boundary for server-side image normalization.
 - 2026-06-27: Updated the pipeline read after product image normalization passed the bird-cam proof.
 - 2026-06-27: Added image normalization after the bird-cam proof exposed Groq image-size limits.
 - 2026-06-27: Created first pipeline explainer for the learning/context layer.
