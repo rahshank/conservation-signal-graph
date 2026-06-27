@@ -25,8 +25,10 @@ GitHub created the Project as private by default. Visibility should be changed s
 | Create public evidence bundle | Todo | Screenshots, test output, latency notes, and source decision live together |
 | Source viability: second public camera candidate | Done | Bartlett Cove documented in source register; targeted adapter and Groq proof passed |
 | Credential hygiene after local GitHub bootstrap | Done | Rotate the exposed local GitHub credential and confirm no credentials exist in repo files or issue text |
+| Add image normalization before Groq vision calls | Todo | Oversized source frames are resized or normalized before model inference |
 
 ## Change log
+- 2026-06-27: Added issue #9 after the bird-cam proof exposed Groq image-size limits.
 - 2026-06-27: Closed issue #7 after documenting Bartlett Cove and proving targeted Groq extraction.
 - 2026-06-27: Updated Groq issue status after successful real model calls against Yosemite Falls and Bartlett Cove.
 - 2026-06-27: Created the actual GitHub Project, attached issues #1-#8, and recorded current statuses.

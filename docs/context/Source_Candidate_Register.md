@@ -22,7 +22,7 @@ The prototype needs a source that can produce meaningful conservation observatio
 | Lower Glacier Bay | Medium | High | NPS API source; image URL available | Medium | Keep as backup Glacier Bay candidate |
 | Katmai Brooks Falls Bearcam | High | Medium | NPS record credits Explore.org partnership; automated monitoring may need permission | High for human interest | Research only unless permission path is clear |
 | Katmai River Watch Cam | High | Medium | NPS record credits Explore-style bear camera ecosystem; terms need review | High for wildlife | Research only unless permission path is clear |
-| Channel Islands nest cams | High seasonal | High | NPS API image URL available for several nest cams; seasonal sensitivity needs care | Medium | Useful for seasonal behavior tests |
+| Channel Islands nest cams | High seasonal | High with image normalization | NPS API image URL available for several nest cams; seasonal sensitivity needs care | Medium | Use as known-context Groq benchmark |
 | Elk Prairie at Prairie Creek Redwoods | High | Low now | NPS record did not expose an image URL in first API scan | Medium | Promising, adapter/source route needed |
 
 ## Recommended Next Source
@@ -55,5 +55,17 @@ Pick sources in this order:
 | Peregrine Falcon Webcam | Channel Islands National Park | `titleIncludes: "Peregrine Falcon"` |
 | Bald Eagle Webcam (Sauces Canyon Nest) | Channel Islands National Park | `titleIncludes: "Sauces Canyon"` |
 
+## Known-Context Benchmark Result
+
+The Channel Islands nest cams are now the best proof set for model extraction quality.
+
+| Source | Expected context | Groq result | Product finding |
+| --- | --- | --- | --- |
+| Peregrine Falcon Webcam | Peregrine falcon / nest camera | Identified Peregrine Falcon with 0.99 confidence after local image resize | Strong known-context benchmark; raw image exceeded Groq pixel limit |
+| Bald Eagle Webcam (Sauces Canyon Nest) | Bald eagle / nest camera | Identified Bald Eagle and eaglet in nest after local image resize | Strong known-context benchmark; useful for action and question generation |
+
+Image normalization is now a product requirement before repeated bird-cam runs.
+
 ## Change Log
+- 2026-06-27: Promoted Channel Islands nest cams to known-context benchmark sources after Groq identified falcon and eagle contexts.
 - 2026-06-27: Created candidate register and promoted Bartlett Cove Lagoon as the next proof source.

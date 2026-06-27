@@ -10,12 +10,13 @@ The prototype is a learning artifact and a product proof. Each step should make 
 ```mermaid
 flowchart LR
   A["Permissioned camera source"] --> B["Image frame URL"]
-  B --> C["Groq vision inference"]
-  C --> D["Structured observation"]
-  D --> E["Neo4j context graph"]
-  E --> F["Dashboard and graph queries"]
-  D --> G["Evidence bundle"]
-  E --> G
+  B --> C["Image normalization"]
+  C --> D["Groq vision inference"]
+  D --> E["Structured observation"]
+  E --> F["Neo4j context graph"]
+  F --> G["Dashboard and graph queries"]
+  E --> H["Evidence bundle"]
+  F --> H
 ```
 
 ## 1. Source
@@ -34,6 +35,8 @@ The source record needs:
 The image URL is the machine-readable frame. The source page is for human review and traceability.
 
 ## 2. Groq Inference
+Some source images are too large for Groq vision input. The bird-cam proof exposed this with an 8640 x 5760 peregrine image. The production pipeline needs an image-normalization step that resizes or otherwise prepares frames before model inference.
+
 Inference means asking a model to produce an answer from an input. Here the input is a camera image and a prompt. Groq returns a structured observation.
 
 The useful output is not a paragraph. The useful output is a validated object:
@@ -116,9 +119,11 @@ The project has passed:
 
 - NPS live-source proof with Yosemite Falls
 - first real Groq extraction with Yosemite Falls
+- known-context Groq proof with Channel Islands bird cams after local image resize
 - GitHub repository, issues, Project board, and CI setup
 
-The next proof should use a more wildlife-likely source, starting with Bartlett Cove Lagoon and Fairweather Range.
+The next implementation step should formalize image normalization before repeated bird-cam runs or Neo4j persistence.
 
 ## Change Log
+- 2026-06-27: Added image normalization after the bird-cam proof exposed Groq image-size limits.
 - 2026-06-27: Created first pipeline explainer for the learning/context layer.
