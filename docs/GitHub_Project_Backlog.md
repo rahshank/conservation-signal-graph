@@ -26,8 +26,10 @@ GitHub created the Project as private by default. Visibility should be changed s
 | Source viability: second public camera candidate | Done | Bartlett Cove documented in source register; targeted adapter and Groq proof passed |
 | Credential hygiene after local GitHub bootstrap | Done | Rotate the exposed local GitHub credential and confirm no credentials exist in repo files or issue text |
 | Add image normalization before Groq vision calls | Done | Oversized source frames are normalized before Groq inference, metadata is recorded, and bird-cam proof passed through the product path |
+| Define product personas and narrative test lenses | Todo | Personas are documented and used to shape acceptance criteria, UI labels, evidence screenshots, and the public case-study narrative |
 
 ## Change log
+- 2026-06-27: Added persona-definition backlog item.
 - 2026-06-27: Marked issue #9 done after image normalization passed the product-path bird-cam proof.
 - 2026-06-27: Added issue #9 after the bird-cam proof exposed Groq image-size limits.
 - 2026-06-27: Closed issue #7 after documenting Bartlett Cove and proving targeted Groq extraction.
