@@ -10,13 +10,15 @@
     "start": "NODE_ENV=production node --env-file-if-exists=.env --import tsx src/server/index.ts",
     "test": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
-    "check": "npm run build && npm run test",
+    "secret:scan": "node scripts/check-no-secrets.mjs",
+    "check": "npm run secret:scan && npm run build && npm run test",
     "source:probe": "node --env-file-if-exists=.env --import tsx src/server/adapters/probe-sources.ts",
     "graph:probe": "node --env-file-if-exists=.env --import tsx src/server/graph/probe-neo4j.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
     "express": "^5.1.0",
+    "lucide-react": "^1.21.0",
     "neo4j-driver": "^5.28.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

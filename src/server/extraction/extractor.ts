@@ -50,7 +50,19 @@ export async function extractObservation(source: SourceEvent): Promise<Extracted
             {
               type: "text",
               text:
-                "Analyze this frame for protected-area monitoring. Return JSON with speciesCandidates, risks, actions, questions, summary, and confidence. Use confidence values from 0 to 1."
+                [
+                  "Analyze this frame for protected-area monitoring.",
+                  "Return only a JSON object with this exact shape:",
+                  "{",
+                  '  "speciesCandidates": [{"label": string, "confidence": number, "evidence": string}],',
+                  '  "risks": [{"label": string, "severity": "low" | "medium" | "high", "confidence": number, "evidence": string}],',
+                  '  "actions": [{"label": string, "ownerHint": string, "confidence": number}],',
+                  '  "questions": [string],',
+                  '  "summary": string,',
+                  '  "confidence": number',
+                  "}",
+                  "Use confidence values from 0 to 1. If the image does not show wildlife, say so directly and create review questions about habitat, visibility, and source quality."
+                ].join("\n")
             },
             {
               type: "image_url",

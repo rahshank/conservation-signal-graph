@@ -6,6 +6,7 @@
 
 ## Verification
 
+- [ ] `npm run secret:scan`
 - [ ] Unit tests
 - [ ] Playwright test
 - [ ] Source-policy note updated when source handling changes
@@ -15,3 +16,4 @@
 
 - [ ] Fixture data is labeled as fixture data
 - [ ] Live-source claims are backed by source proof
+- [ ] No credentials appear in logs, screenshots, issues, docs, or commits

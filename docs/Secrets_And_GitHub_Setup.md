@@ -6,8 +6,9 @@ Do not paste API keys into chat, tickets, commits, screenshots, or public notes.
 Local keys belong in `.env`, which is ignored by Git:
 
 ```sh
-NPS_API_KEY=your-key-here
-GROQ_API_KEY=your-key-here
+# Put the real values after the equals signs in .env.
+NPS_API_KEY=
+GROQ_API_KEY=
 ```
 
 Committed files should only contain blank examples, such as `.env.example`.
@@ -20,7 +21,7 @@ npm run dev
 ```
 
 ## GitHub repo
-The project is prepared for a real GitHub repository:
+The project has a real GitHub repository:
 
 - CI workflow in `.github/workflows/ci.yml`
 - PR template in `.github/pull_request_template.md`
@@ -28,8 +29,10 @@ The project is prepared for a real GitHub repository:
 - backlog seed in `docs/GitHub_Project_Backlog.md`
 - evidence note in `docs/Evidence_2026-06-27.md`
 
+Repository: https://github.com/rahshank/conservation-signal-graph
+
 ## GitHub Project setup
-Create a GitHub Project with these columns:
+Create or connect a GitHub Project with these status values:
 
 - Source gate
 - Spec
@@ -37,10 +40,11 @@ Create a GitHub Project with these columns:
 - Verify
 - Evidence
 
-Seed the issues from `docs/GitHub_Project_Backlog.md`.
+The first issue set has been created in GitHub. Project attachment is blocked on the `project` OAuth scope.
 
 ## Current environment note
-The GitHub CLI is not installed in this Codex environment, and no GitHub plugin tool is currently callable. The local repository can still be prepared and committed here. Remote repo creation and project-board setup need either the GitHub plugin, GitHub CLI, or a token-backed API path.
+The repo and issues were created through the terminal/API route. GitHub Project creation needs a token or GitHub CLI auth flow with the `project` scope.
 
 ## Change log
+- 2026-06-27: Updated after creating the actual GitHub repository and issues.
 - 2026-06-27: Added secret handling and GitHub setup notes.

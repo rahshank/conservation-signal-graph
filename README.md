@@ -9,16 +9,20 @@ A camera or near-live source enters the system. Groq turns the frame into struct
 The prototype scaffold is implemented with:
 
 - TypeScript server and React dashboard
-- NPS webcam source probe
+- NPS Yosemite Falls live-source probe
 - Groq extraction boundary
 - Neo4j graph repository boundary
 - Fixture extractor for local development
 - Unit tests and Playwright smoke test
 - Source-policy, product, technical, and test docs
 
-The live-source gate is still open. The NPS webcam API is the first serious target, but it requires an API key before a live-source proof can run.
+The first live-source gate has passed with the NPS Yosemite Falls webcam source. Groq and Neo4j are still explicit proof gates: fixture extraction is not a Groq claim, and memory graph mode is not a Neo4j claim.
 
 Secret handling and GitHub setup: [Secrets And GitHub Setup](docs/Secrets_And_GitHub_Setup.md)
+Agentic product standard: [Agentic Product Development Standard](docs/Agentic_Product_Development_Standard.md)
+Credential handling runbook: [Credential Handling Runbook](docs/Credential_Handling_Runbook.md)
+Agentic practice comparison: [Agentic Practice Comparison](docs/Agentic_Practice_Comparison.md)
+Security policy: [Security Policy](SECURITY.md)
 
 ## Run locally
 
@@ -37,7 +41,7 @@ npm run test:e2e
 npm run source:probe
 ```
 
-`npm run source:probe` reports `missing_key` until `NPS_API_KEY` is set.
+`npm run source:probe` requires `NPS_API_KEY` in `.env`.
 
 ## Optional Neo4j
 
@@ -58,6 +62,7 @@ The app uses in-memory graph storage when Neo4j credentials are absent or `CSG_F
 | `tests/` | Unit and Playwright tests | current |
 | `docs/` | Product, source, technical, and public writeup material | current |
 | `.github/` | Issue and PR templates for public project workflow | current |
+| `SECURITY.md` | Credential, verification, and agentic-context security rules | current |
 
 First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 
@@ -74,4 +79,5 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-27: Updated project status after the NPS Yosemite Falls source gate passed and added the security policy link.
 - 2026-06-27: Created the project scaffold, source gate, dashboard, graph model, tests, and project docs.

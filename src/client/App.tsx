@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { Activity, AlertTriangle, Cpu, Database, GitBranch, Play, RadioTower, RotateCw, ShieldCheck } from "lucide-react";
 import type { DashboardState, GraphNode } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
 
@@ -57,45 +58,60 @@ export function App() {
 
   const latest = state.events[0];
   const groupedNodes = useMemo(() => groupNodesByKind(state.graph.nodes), [state.graph.nodes]);
+  const latestConfidence = Math.round(latest.observation.confidence * 100);
+  const isLive = latest.source.sourceType === "live_camera";
 
   return (
     <main className="shell">
-      <section className="topbar" aria-label="Project summary">
-        <div>
-          <p className="eyebrow">Groq + Neo4j protected-area monitoring prototype</p>
-          <h1>Conservation Signal Graph</h1>
+      <section className="commandBar" aria-label="Project command bar">
+        <div className="identity">
+          <div className="mark"><RadioTower size={24} /></div>
+          <div>
+            <p className="eyebrow">Protected-area signal intelligence</p>
+            <h1>Conservation Signal Graph</h1>
+          </div>
         </div>
-        <div className="topbarActions">
-          <button onClick={probeNps}>Probe live source</button>
-          <button onClick={ingestNps}>Ingest NPS source</button>
-          <button className="primary" onClick={ingestFixture}>Ingest next signal</button>
+        <div className="commandActions">
+          <button onClick={probeNps}><RotateCw size={16} />Probe</button>
+          <button onClick={ingestNps}><RadioTower size={16} />Ingest NPS</button>
+          <button className="primary" onClick={ingestFixture}><Play size={16} />Fixture run</button>
         </div>
       </section>
 
-      <section className="metrics" aria-label="Metrics">
-        <Metric label="Events" value={state.metrics.totalEvents.toString()} />
-        <Metric label="Live" value={state.metrics.liveEvents.toString()} />
-        <Metric label="Graph" value={state.metrics.graphMode} />
-        <Metric label="Extraction" value={state.metrics.extractionMode} />
-        <Metric label="Avg latency" value={`${state.metrics.averageLatencyMs} ms`} />
+      <section className="statusRail" aria-label="System status">
+        <Metric icon={<Activity size={17} />} label="Events" value={state.metrics.totalEvents.toString()} />
+        <Metric icon={<RadioTower size={17} />} label="Live source" value={state.metrics.liveEvents.toString()} />
+        <Metric icon={<GitBranch size={17} />} label="Graph" value={state.metrics.graphMode} />
+        <Metric icon={<Cpu size={17} />} label="Extraction" value={state.metrics.extractionMode} />
+        <Metric icon={<Database size={17} />} label="Latency" value={`${state.metrics.averageLatencyMs} ms`} />
       </section>
 
       <section className="gate" aria-label="Live source gate">
-        <div>
+        <div className="gateCopy">
+          <ShieldCheck size={20} />
+          <div>
           <strong>{state.sourceGate.label}</strong>
           <p>{state.sourceGate.detail}</p>
+          </div>
         </div>
         <span className={`pill ${state.sourceGate.status}`}>{state.sourceGate.status.replace(/_/g, " ")}</span>
       </section>
 
       <section className="workspace" aria-label="Monitoring workspace">
-        <div className="panel framePanel">
+        <div className="panel framePanel heroPanel">
           <div className="panelHeader">
-            <h2>Current Frame</h2>
-            <span>{latest.source.sourceType.replace("_", " ")}</span>
+            <div>
+              <h2>{latest.source.sourceName}</h2>
+              <p>{latest.source.locationLabel}</p>
+            </div>
+            <span className={isLive ? "sourceBadge live" : "sourceBadge fixture"}>{latest.source.sourceType.replace("_", " ")}</span>
           </div>
           <div className="frame">
             <img src={latest.source.imageUrl ?? "/fixture-frame.svg"} alt={latest.source.sourceName} />
+            <div className="frameOverlay">
+              <span>{new Date(latest.source.capturedAt).toLocaleTimeString()}</span>
+              <strong>{latestConfidence}%</strong>
+            </div>
           </div>
           <dl className="sourceFacts">
             <div><dt>Source</dt><dd>{latest.source.sourceName}</dd></div>
@@ -106,8 +122,11 @@ export function App() {
 
         <div className="panel eventPanel">
           <div className="panelHeader">
-            <h2>Incoming Observations</h2>
-            <span>{status}</span>
+            <div>
+              <h2>Signal Feed</h2>
+              <p>{status}</p>
+            </div>
+            <span>{state.events.length} retained</span>
           </div>
           <div className="eventList">
             {state.events.map((event) => (
@@ -124,7 +143,10 @@ export function App() {
 
         <div className="panel graphPanel">
           <div className="panelHeader">
-            <h2>Context Graph</h2>
+            <div>
+              <h2>Context Graph</h2>
+              <p>Evidence, uncertainty, actions, and questions</p>
+            </div>
             <span>{state.graph.nodes.length} nodes / {state.graph.relationships.length} edges</span>
           </div>
           <div className="graphCanvas" aria-label="Graph nodes">
@@ -136,8 +158,11 @@ export function App() {
 
         <div className="panel queryPanel">
           <div className="panelHeader">
-            <h2>Graph Queries</h2>
-            <span>Predefined checks</span>
+            <div>
+              <h2>Review Queue</h2>
+              <p>Predefined graph checks</p>
+            </div>
+            <AlertTriangle size={18} />
           </div>
           <QueryResult label="Unresolved risks" nodes={groupedNodes.Risk ?? []} />
           <QueryResult label="Actions needing review" nodes={groupedNodes.Action ?? []} />
@@ -148,10 +173,10 @@ export function App() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="metric">
-      <span>{label}</span>
+      <span>{icon}{label}</span>
       <strong>{value}</strong>
     </div>
   );
