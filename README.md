@@ -23,6 +23,7 @@ Agentic product standard: [Agentic Product Development Standard](docs/Agentic_Pr
 Credential handling runbook: [Credential Handling Runbook](docs/Credential_Handling_Runbook.md)
 Agentic practice comparison: [Agentic Practice Comparison](docs/Agentic_Practice_Comparison.md)
 Security policy: [Security Policy](SECURITY.md)
+Linear project: [Conservation Signal Graph](https://linear.app/rahshank/project/conservation-signal-graph-2f78e7f44301)
 Pipeline explainer: [Pipeline Explainer](docs/context/Pipeline_Explainer.md)
 Source candidates: [Source Candidate Register](docs/context/Source_Candidate_Register.md)
 Glossary: [Glossary](docs/context/Glossary.md)
@@ -83,6 +84,7 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-27: Added Linear as the operating backlog link.
 - 2026-06-27: Added context-layer links and clarified that Bartlett Cove is the next wildlife-likelihood proof source.
 - 2026-06-27: Updated project status after the NPS Yosemite Falls source gate passed and added the security policy link.
 - 2026-06-27: Created the project scaffold, source gate, dashboard, graph model, tests, and project docs.
