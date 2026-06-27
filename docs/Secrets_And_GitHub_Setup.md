@@ -32,19 +32,20 @@ The project has a real GitHub repository:
 Repository: https://github.com/rahshank/conservation-signal-graph
 
 ## GitHub Project setup
-Create or connect a GitHub Project with these status values:
+The GitHub Project exists and has issues #1-#8 attached:
 
-- Source gate
-- Spec
-- Build
-- Verify
-- Evidence
+Project: https://github.com/users/rahshank/projects/1
 
-The first issue set has been created in GitHub. Project attachment is blocked on the `project` OAuth scope.
+Current statuses:
+
+- Done: #1, #8
+- In Progress: #2, #3
+- Todo: #4, #5, #6, #7
 
 ## Current environment note
-The repo and issues were created through the terminal/API route. GitHub Project creation needs a token or GitHub CLI auth flow with the `project` scope.
+The repo and issues were created through the terminal/API route. GitHub CLI browser authorization succeeded for the `project` scope, but local token persistence failed at the macOS keyring handoff. The Project was created through the signed-in GitHub browser UI instead. Do not solve this by pasting a broad token into chat or shell output.
 
 ## Change log
+- 2026-06-27: Updated after creating the actual GitHub Project through the browser UI.
 - 2026-06-27: Updated after creating the actual GitHub repository and issues.
 - 2026-06-27: Added secret handling and GitHub setup notes.
