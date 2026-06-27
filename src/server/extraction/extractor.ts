@@ -5,6 +5,7 @@ const PROMPT_VERSION = "csg-v0.1";
 
 export async function extractObservation(source: SourceEvent): Promise<ExtractedObservation> {
   if (process.env.CSG_FORCE_FIXTURE === "1" || !process.env.GROQ_API_KEY || !source.imageUrl) {
+    const isLiveSource = source.sourceType === "live_camera";
     return {
       ...fixtureObservation,
       observationId: `obs-${Date.now()}`,
@@ -12,7 +13,16 @@ export async function extractObservation(source: SourceEvent): Promise<Extracted
       frameId: `frame-${Date.now()}`,
       observedAt: source.capturedAt,
       model: "fixture-extractor",
-      validationStatus: "fixture"
+      validationStatus: "fixture",
+      summary: isLiveSource
+        ? `Fixture extraction placeholder for ${source.sourceName}. The source metadata is live, but the observation text still needs a real Groq extraction.`
+        : fixtureObservation.summary,
+      questions: isLiveSource
+        ? [
+            "What does Groq identify in this live camera image?",
+            "Which graph relationships should be created after model extraction?"
+          ]
+        : fixtureObservation.questions
     };
   }
 

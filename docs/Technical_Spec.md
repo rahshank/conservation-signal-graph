@@ -58,6 +58,7 @@ Core relationships:
 | `GET /api/metrics` | Latency, mode, and event metrics |
 | `GET /api/sources/probe/nps` | NPS live-source gate |
 | `POST /api/events/ingest` | Ingest a source event or fixture event |
+| `POST /api/events/ingest/nps` | Probe and ingest the configured NPS source |
 
 ## Groq boundary
 The extractor calls Groq only when `GROQ_API_KEY` is set, `CSG_FORCE_FIXTURE` is not `1`, and the source has an `imageUrl`.

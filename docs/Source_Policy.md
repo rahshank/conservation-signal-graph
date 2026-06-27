@@ -23,7 +23,7 @@ A source can enter the live prototype when all are true:
 
 | Candidate | Role | Current decision | Next action |
 | --- | --- | --- | --- |
-| NPS webcam API | First live-source adapter | Needs API key | Add `NPS_API_KEY`, run `npm run source:probe`, inspect returned camera metadata |
+| NPS webcam API | First live-source adapter | Yosemite passes with `NPS_PARK_CODE=yose`; Yellowstone, Grand Canyon, Acadia, and Glacier returned no image URL in the first probe | Run the live-source proof with `NPS_PARK_CODE=yose`, then inspect source-specific credits before public redistribution |
 | Explore.org live cams | Product reference | Permission needed for automated monitoring | Use for research only unless a permissioned route appears |
 | LILA datasets | Fixture and regression source | Approved for development fixtures | Keep public claims clear that fixture replay is not live ingestion |
 

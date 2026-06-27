@@ -66,12 +66,21 @@ export async function probeNpsWebcamSource(options: {
       sourceName: webcam.title ?? `NPS ${parkCode} webcam`,
       sourceType: "live_camera",
       capturedAt: new Date().toISOString(),
-      imageUrl: image.url,
+      imageUrl: normalizeNpsUrl(image.url),
       locationLabel: webcam.relatedParks?.[0]?.fullName ?? `NPS park ${parkCode}`,
-      sourcePageUrl: webcam.url ?? "https://www.nps.gov/subjects/developer/api-documentation.htm",
+      sourcePageUrl: normalizeNpsUrl(webcam.url) ?? "https://www.nps.gov/subjects/developer/api-documentation.htm",
       licenseOrTermsRef: "NPS API and DOI/NPS notices; confirm camera-specific credits before public redistribution.",
       termsStatus: "requires_key",
       notes: image.caption ?? webcam.description ?? image.altText
     })
   };
+}
+
+function normalizeNpsUrl(value?: string): string | undefined {
+  if (!value) return undefined;
+  const duplicatePrefix = "https://www.nps.govhttps://www.nps.gov";
+  if (value.startsWith(duplicatePrefix)) return value.replace(duplicatePrefix, "https://www.nps.gov");
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (value.startsWith("/")) return `https://www.nps.gov${value}`;
+  return value;
 }

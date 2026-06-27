@@ -33,6 +33,18 @@ export function App() {
     setStatus("Signal ingested");
   }
 
+  async function ingestNps() {
+    setStatus("Ingesting NPS source...");
+    const response = await fetch("/api/events/ingest/nps", { method: "POST" });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      setStatus(body?.detail ? `NPS ingest blocked: ${body.detail}` : `NPS ingest failed: HTTP ${response.status}`);
+      return;
+    }
+    setState((await response.json()) as DashboardState);
+    setStatus("NPS source ingested");
+  }
+
   async function probeNps() {
     setStatus("Checking NPS webcam source...");
     const response = await fetch("/api/sources/probe/nps");
@@ -55,6 +67,7 @@ export function App() {
         </div>
         <div className="topbarActions">
           <button onClick={probeNps}>Probe live source</button>
+          <button onClick={ingestNps}>Ingest NPS source</button>
           <button className="primary" onClick={ingestFixture}>Ingest next signal</button>
         </div>
       </section>

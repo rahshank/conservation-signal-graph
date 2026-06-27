@@ -67,6 +67,25 @@ export async function createApp() {
     }
   });
 
+  app.post("/api/events/ingest/nps", async (_request, response, next) => {
+    try {
+      const result = await probeNpsWebcamSource();
+      if (!result.ok) {
+        response.status(400).json(result);
+        return;
+      }
+      store.setSourceGate({
+        status: "ready_for_probe",
+        label: "NPS webcam source ready",
+        detail: `Ingested ${result.source.sourceName} as a live source. Extraction remains in ${process.env.CSG_FORCE_FIXTURE === "1" ? "fixture" : "model"} mode.`
+      });
+      const observation = await extractObservation(result.source);
+      response.json(await store.add(result.source, observation));
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     response.status(500).json({
       error: error instanceof Error ? error.message : String(error)
