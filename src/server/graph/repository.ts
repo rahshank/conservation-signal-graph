@@ -1,6 +1,29 @@
 import neo4j, { type Driver } from "neo4j-driver";
-import type { ExtractedObservation, GraphSnapshot, SourceEvent } from "../../shared/schema";
+import type { ExtractedObservation, GraphNode, GraphRelationship, GraphSnapshot, SourceEvent } from "../../shared/schema";
 import { buildGraphSnapshot } from "./map-observation";
+
+const KNOWN_NODE_KINDS: GraphNode["kind"][] = [
+  "Source",
+  "Frame",
+  "Observation",
+  "SpeciesCandidate",
+  "Place",
+  "Risk",
+  "Action",
+  "Question",
+  "Run"
+];
+
+const KNOWN_RELATIONSHIP_TYPES: GraphRelationship["type"][] = [
+  "CAPTURED_FROM",
+  "OBSERVED_AT",
+  "SUGGESTS_SPECIES",
+  "RAISES_RISK",
+  "REQUIRES_ACTION",
+  "RAISES_QUESTION",
+  "SUPPORTED_BY",
+  "GENERATED_IN_RUN"
+];
 
 export interface GraphRepository {
   mode: "neo4j" | "memory";
@@ -28,68 +51,112 @@ export class MemoryGraphRepository implements GraphRepository {
 
 export class Neo4jGraphRepository implements GraphRepository {
   mode = "neo4j" as const;
-  private fallback = new MemoryGraphRepository();
 
   constructor(private driver: Driver) {}
 
   async writeObservation(source: SourceEvent, observation: ExtractedObservation): Promise<GraphSnapshot> {
-    const graph = await this.fallback.writeObservation(source, observation);
+    const graph = buildGraphSnapshot(source, observation);
     const session = this.driver.session();
     try {
-      await session.executeWrite((tx) =>
-        tx.run(
-          `
-          MERGE (source:Source {id: $sourceId})
-            SET source.label = $sourceName,
-                source.sourceType = $sourceType,
-                source.termsStatus = $termsStatus
-          MERGE (frame:Frame {id: $frameId})
-            SET frame.capturedAt = datetime($capturedAt),
-                frame.imageUrl = $imageUrl
-          MERGE (place:Place {id: $placeId})
-            SET place.label = $locationLabel
-          MERGE (observation:Observation {id: $observationId})
-            SET observation.summary = $summary,
-                observation.confidence = $confidence,
-                observation.model = $model,
-                observation.promptVersion = $promptVersion,
-                observation.latencyMs = $latencyMs
-          MERGE (frame)-[:CAPTURED_FROM]->(source)
-          MERGE (frame)-[:OBSERVED_AT]->(place)
-          MERGE (observation)-[:SUPPORTED_BY {confidence: $confidence}]->(frame)
-          `,
-          {
-            sourceId: source.sourceId,
-            sourceName: source.sourceName,
-            sourceType: source.sourceType,
-            termsStatus: source.termsStatus,
-            frameId: observation.frameId,
-            capturedAt: source.capturedAt,
-            imageUrl: source.imageUrl ?? null,
-            placeId: source.locationLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-            locationLabel: source.locationLabel,
-            observationId: observation.observationId,
-            summary: observation.summary,
-            confidence: observation.confidence,
-            model: observation.model,
-            promptVersion: observation.promptVersion,
-            latencyMs: observation.latencyMs
-          }
-        )
-      );
+      await session.executeWrite(async (tx) => {
+        for (const node of graph.nodes) {
+          await tx.run(
+            `
+            MERGE (node:${node.kind} {id: $id})
+              SET node.label = $label,
+                  node.confidence = $confidence
+            `,
+            {
+              id: node.id,
+              label: node.label,
+              confidence: node.confidence ?? null
+            }
+          );
+        }
+
+        for (const relationship of graph.relationships) {
+          await tx.run(
+            `
+            MATCH (from {id: $from})
+            MATCH (to {id: $to})
+            MERGE (from)-[relationship:${relationship.type}]->(to)
+              SET relationship.confidence = $confidence
+            `,
+            {
+              from: relationship.from,
+              to: relationship.to,
+              confidence: relationship.confidence ?? null
+            }
+          );
+        }
+      });
     } finally {
       await session.close();
     }
-    return graph;
+    return this.snapshot();
   }
 
   async snapshot(): Promise<GraphSnapshot> {
-    return this.fallback.snapshot();
+    const session = this.driver.session();
+    try {
+      const [nodeResult, relationshipResult] = await session.executeRead(async (tx) => {
+        const nodes = await tx.run(
+          `
+          MATCH (node)
+          WHERE any(label IN labels(node) WHERE label IN $knownKinds)
+          RETURN node.id AS id, node.label AS label, labels(node)[0] AS kind, node.confidence AS confidence
+          ORDER BY id
+          `,
+          { knownKinds: KNOWN_NODE_KINDS }
+        );
+        const relationships = await tx.run(
+          `
+          MATCH (from)-[relationship]->(to)
+          WHERE type(relationship) IN $knownTypes
+            AND any(label IN labels(from) WHERE label IN $knownKinds)
+            AND any(label IN labels(to) WHERE label IN $knownKinds)
+          RETURN from.id AS from, to.id AS to, type(relationship) AS type, relationship.confidence AS confidence
+          ORDER BY from, type, to
+          `,
+          {
+            knownKinds: KNOWN_NODE_KINDS,
+            knownTypes: KNOWN_RELATIONSHIP_TYPES
+          }
+        );
+        return [nodes, relationships] as const;
+      });
+
+      return {
+        nodes: nodeResult.records.map((record) => ({
+          id: record.get("id") as string,
+          label: record.get("label") as string,
+          kind: record.get("kind") as GraphNode["kind"],
+          confidence: toOptionalNumber(record.get("confidence"))
+        })),
+        relationships: relationshipResult.records.map((record) => ({
+          from: record.get("from") as string,
+          to: record.get("to") as string,
+          type: record.get("type") as GraphRelationship["type"],
+          confidence: toOptionalNumber(record.get("confidence"))
+        }))
+      };
+    } finally {
+      await session.close();
+    }
   }
 
   async close(): Promise<void> {
     await this.driver.close();
   }
+}
+
+function toOptionalNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === "number") return value;
+  if (typeof value === "object" && "toNumber" in value && typeof value.toNumber === "function") {
+    return value.toNumber();
+  }
+  return Number(value);
 }
 
 export function createGraphRepository(): GraphRepository {
