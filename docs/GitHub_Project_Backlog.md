@@ -27,8 +27,10 @@ GitHub created the Project as private by default. Visibility should be changed s
 | Credential hygiene after local GitHub bootstrap | Done | Rotate the exposed local GitHub credential and confirm no credentials exist in repo files or issue text |
 | Add image normalization before Groq vision calls | Done | Oversized source frames are normalized before Groq inference, metadata is recorded, and bird-cam proof passed through the product path |
 | Define product personas and narrative test lenses | Todo | Personas are documented and used to shape acceptance criteria, UI labels, evidence screenshots, and the public case-study narrative |
+| Ingest trusted commentary context for camera sources | Todo | Official or permitted commentary can be ingested as source-linked context and connected to frames, observations, species, actors, events, and review questions |
 
 ## Change log
+- 2026-06-27: Added trusted commentary context backlog item.
 - 2026-06-27: Added persona-definition backlog item.
 - 2026-06-27: Marked issue #9 done after image normalization passed the product-path bird-cam proof.
 - 2026-06-27: Added issue #9 after the bird-cam proof exposed Groq image-size limits.

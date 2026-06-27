@@ -66,7 +66,14 @@ The Channel Islands nest cams are now the best proof set for model extraction qu
 
 Image normalization is now implemented in the product path before Groq vision calls.
 
+## Supporting Context Candidate
+
+Big Bear is the strongest example for commentary context research. Friends of Big Bear Valley maintains official eagle nest pages, livestreams, history, stories, quick references, communities, and recap reports. Public coverage also shows the kind of detail this layer should capture: recurring named animals, nest milestones, and operator explanations around ambiguous behavior.
+
+The current decision is research only until a permitted ingestion route is confirmed.
+
 ## Change Log
+- 2026-06-27: Added Big Bear as the supporting-context example for future commentary ingestion.
 - 2026-06-27: Updated the bird-cam benchmark after product image normalization passed.
 - 2026-06-27: Promoted Channel Islands nest cams to known-context benchmark sources after Groq identified falcon and eagle contexts.
 - 2026-06-27: Created candidate register and promoted Bartlett Cove Lagoon as the next proof source.
