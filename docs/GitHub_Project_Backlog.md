@@ -23,10 +23,11 @@ GitHub created the Project as private by default. Visibility should be changed s
 | Persist observation graph in Neo4j | Todo | Local Neo4j starts and `npm run graph:probe` reports `mode: neo4j` |
 | Expand Neo4j relationship writes | Todo | Species, risk, action, and question relationships are persisted in Neo4j |
 | Create public evidence bundle | Todo | Screenshots, test output, latency notes, and source decision live together |
-| Source viability: second public camera candidate | Todo | Terms and access route documented; decision recorded |
+| Source viability: second public camera candidate | Done | Bartlett Cove documented in source register; targeted adapter and Groq proof passed |
 | Credential hygiene after local GitHub bootstrap | Done | Rotate the exposed local GitHub credential and confirm no credentials exist in repo files or issue text |
 
 ## Change log
+- 2026-06-27: Closed issue #7 after documenting Bartlett Cove and proving targeted Groq extraction.
 - 2026-06-27: Updated Groq issue status after successful real model calls against Yosemite Falls and Bartlett Cove.
 - 2026-06-27: Created the actual GitHub Project, attached issues #1-#8, and recorded current statuses.
 - 2026-06-27: Added design-pass and credential-hygiene work after the first real GitHub setup pass.
