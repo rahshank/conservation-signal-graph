@@ -34,8 +34,14 @@ The source record needs:
 
 The image URL is the machine-readable frame. The source page is for human review and traceability.
 
-## 2. Groq Inference
-Some source images are too large for Groq vision input. The bird-cam proof exposed this with an 8640 x 5760 peregrine image. The production pipeline needs an image-normalization step that resizes or otherwise prepares frames before model inference.
+## 2. Image Normalization
+Some source images are too large for Groq vision input. The bird-cam proof exposed this with an 8640 x 5760 peregrine image.
+
+The pipeline now normalizes source frames before Groq inference. It fetches the image, reads its dimensions and byte size, preserves the original source URL, and submits a resized JPEG when the original frame exceeds the model limits. Each observation records the original dimensions, submitted dimensions, submitted byte size, and whether resizing happened.
+
+This keeps the source traceable while giving the model an image it can accept.
+
+## 3. Groq Inference
 
 Inference means asking a model to produce an answer from an input. Here the input is a camera image and a prompt. Groq returns a structured observation.
 
@@ -54,7 +60,7 @@ The useful output is not a paragraph. The useful output is a validated object:
 
 Groq matters here when the workflow depends on many small model calls that need to stay fast: check the frame, identify candidates, name uncertainty, create review questions, and prepare graph writes.
 
-## 3. Structured Observation
+## 4. Structured Observation
 The observation is the contract between AI output and the rest of the product.
 
 The schema prevents the model from becoming loose prose. If the output cannot match the schema, it should fail validation instead of entering the graph as if it were reliable.
@@ -65,7 +71,7 @@ Current validation states:
 - `valid`: model output matched the schema
 - `invalid`: model output failed validation
 
-## 4. Context Graph
+## 5. Context Graph
 The graph stores observations as connected facts.
 
 Core nodes:
@@ -93,12 +99,12 @@ Core relationships:
 
 The graph lets the product answer relationship questions: which source produced this observation, what model run generated it, which risks are unresolved, which actions need review, and what evidence supports a claim.
 
-## 5. Dashboard
+## 6. Dashboard
 The dashboard is the review surface. It should show the current frame, source status, extraction mode, graph mode, confidence, latency, review queue, and graph relationships.
 
 The UI should never blur fixture proof, Groq proof, and Neo4j proof. Each mode needs to be visible.
 
-## 6. Evidence
+## 7. Evidence
 Evidence is the record that the pipeline actually ran.
 
 For each proof gate, record:
@@ -119,11 +125,12 @@ The project has passed:
 
 - NPS live-source proof with Yosemite Falls
 - first real Groq extraction with Yosemite Falls
-- known-context Groq proof with Channel Islands bird cams after local image resize
+- known-context Groq proof with Channel Islands bird cams through the product normalization path
 - GitHub repository, issues, Project board, and CI setup
 
-The next implementation step should formalize image normalization before repeated bird-cam runs or Neo4j persistence.
+The next implementation step is to surface model-run and frame-normalization details in the UI before Neo4j persistence.
 
 ## Change Log
+- 2026-06-27: Updated the pipeline read after product image normalization passed the bird-cam proof.
 - 2026-06-27: Added image normalization after the bird-cam proof exposed Groq image-size limits.
 - 2026-06-27: Created first pipeline explainer for the learning/context layer.

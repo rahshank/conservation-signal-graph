@@ -10,6 +10,7 @@ Define the working terms used in the Conservation Signal Graph project.
 | Groq | An inference provider known for fast model serving. In this project, Groq analyzes camera frames and returns structured observations. |
 | Inference | A model call. The system sends an input such as an image and prompt, and the model returns an output. |
 | Vision model | A model that can inspect images. Here it reads a webcam frame and describes observable conservation signals. |
+| Image normalization | Preparing a source image for model input while preserving traceability. In this project, normalization records the original image URL, dimensions, and byte size, then resizes oversized frames before Groq vision calls. |
 | Prompt version | A named version of the instruction sent to the model. The project stores it so model outputs can be traced and compared. |
 | Structured output | Model output shaped as validated data rather than free-form prose. This project expects species candidates, risks, actions, questions, summary, and confidence. |
 | Validation status | The result of checking model output against the schema. Current values are `fixture`, `valid`, and `invalid`. |
@@ -30,4 +31,5 @@ Define the working terms used in the Conservation Signal Graph project.
 | Extraction mode | Whether observations came from fixtures or Groq. `fixture` proves wiring. `groq` proves real model inference. |
 
 ## Change Log
+- 2026-06-27: Added image normalization.
 - 2026-06-27: Created the first project glossary.

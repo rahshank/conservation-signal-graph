@@ -1,5 +1,6 @@
 import { extractedObservationSchema, type ExtractedObservation, type SourceEvent } from "../../shared/schema";
 import { fixtureObservation } from "../fixtures";
+import { normalizeImageForGroq } from "./image-normalization";
 
 const PROMPT_VERSION = "csg-v0.1";
 
@@ -28,6 +29,7 @@ export async function extractObservation(source: SourceEvent): Promise<Extracted
 
   const startedAt = Date.now();
   const model = process.env.GROQ_VISION_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+  const normalizedImage = await normalizeImageForGroq(source.imageUrl);
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -66,7 +68,7 @@ export async function extractObservation(source: SourceEvent): Promise<Extracted
             },
             {
               type: "image_url",
-              image_url: { url: source.imageUrl }
+              image_url: { url: normalizedImage.imageUrl }
             }
           ]
         }
@@ -97,6 +99,7 @@ export async function extractObservation(source: SourceEvent): Promise<Extracted
     model,
     promptVersion: PROMPT_VERSION,
     latencyMs: Date.now() - startedAt,
-    validationStatus: "valid"
+    validationStatus: "valid",
+    frameProcessing: normalizedImage.metadata
   });
 }

@@ -47,7 +47,18 @@ export const extractedObservationSchema = z.object({
   model: z.string().min(1),
   promptVersion: z.string().min(1),
   latencyMs: z.number().min(0),
-  validationStatus: z.enum(["valid", "fixture", "invalid"])
+  validationStatus: z.enum(["valid", "fixture", "invalid"]),
+  frameProcessing: z.object({
+    originalImageUrl: z.string().min(1),
+    originalWidth: z.number().int().positive(),
+    originalHeight: z.number().int().positive(),
+    originalBytes: z.number().int().nonnegative(),
+    submittedWidth: z.number().int().positive(),
+    submittedHeight: z.number().int().positive(),
+    submittedBytes: z.number().int().nonnegative(),
+    resized: z.boolean(),
+    reason: z.enum(["within_limits", "oversized_dimensions", "oversized_payload"])
+  }).optional()
 });
 
 export const graphNodeSchema = z.object({
