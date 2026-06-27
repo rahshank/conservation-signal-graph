@@ -19,10 +19,14 @@ export type ProbeResult =
 export async function probeNpsWebcamSource(options: {
   apiKey?: string;
   parkCode?: string;
+  webcamId?: string;
+  titleIncludes?: string;
   fetchImpl?: typeof fetch;
 } = {}): Promise<ProbeResult> {
   const apiKey = options.apiKey ?? process.env.NPS_API_KEY;
   const parkCode = options.parkCode ?? process.env.NPS_PARK_CODE ?? "yell";
+  const webcamId = options.webcamId ?? process.env.NPS_WEBCAM_ID;
+  const titleIncludes = options.titleIncludes ?? process.env.NPS_WEBCAM_TITLE;
   const fetchImpl = options.fetchImpl ?? fetch;
 
   if (!apiKey) {
@@ -34,8 +38,8 @@ export async function probeNpsWebcamSource(options: {
   }
 
   const url = new URL("https://developer.nps.gov/api/v1/webcams");
-  url.searchParams.set("parkCode", parkCode);
-  url.searchParams.set("limit", "10");
+  if (parkCode && !webcamId && !titleIncludes) url.searchParams.set("parkCode", parkCode);
+  url.searchParams.set("limit", webcamId || titleIncludes ? "500" : "10");
   url.searchParams.set("api_key", apiKey);
 
   const response = await fetchImpl(url);
@@ -48,7 +52,7 @@ export async function probeNpsWebcamSource(options: {
   }
 
   const json = (await response.json()) as NpsWebcamResponse;
-  const webcam = json.data?.find((item) => item.images?.some((image) => image.url));
+  const webcam = selectWebcam(json.data ?? [], { webcamId, titleIncludes });
   const image = webcam?.images?.find((item) => item.url);
 
   if (!webcam || !image?.url) {
@@ -74,6 +78,27 @@ export async function probeNpsWebcamSource(options: {
       notes: image.caption ?? webcam.description ?? image.altText
     })
   };
+}
+
+function selectWebcam(
+  webcams: NonNullable<NpsWebcamResponse["data"]>,
+  target: { webcamId?: string; titleIncludes?: string }
+) {
+  const imageBearing = webcams.filter((item) => item.images?.some((image) => image.url));
+  const idNeedle = target.webcamId?.trim().toLowerCase();
+  const titleNeedle = target.titleIncludes?.trim().toLowerCase();
+
+  if (idNeedle) {
+    const exact = imageBearing.find((item) => item.id?.toLowerCase() === idNeedle);
+    if (exact) return exact;
+  }
+
+  if (titleNeedle) {
+    const titleMatch = imageBearing.find((item) => item.title?.toLowerCase().includes(titleNeedle));
+    if (titleMatch) return titleMatch;
+  }
+
+  return imageBearing[0];
 }
 
 function normalizeNpsUrl(value?: string): string | undefined {

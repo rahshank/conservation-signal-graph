@@ -20,6 +20,37 @@ describe("live source gate", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.status).toBe("missing_key");
   });
+
+  it("can target a specific NPS webcam by title", async () => {
+    const result = await probeNpsWebcamSource({
+      apiKey: "test-key",
+      titleIncludes: "Bartlett Cove Lagoon",
+      fetchImpl: async () =>
+        new Response(JSON.stringify({
+          data: [
+            {
+              id: "falls",
+              title: "Yosemite Falls",
+              relatedParks: [{ parkCode: "yose", fullName: "Yosemite National Park" }],
+              images: [{ url: "/common/uploads/cropped_image/falls.jpg" }]
+            },
+            {
+              id: "lagoon",
+              title: "Bartlett Cove Lagoon and Fairweather Range",
+              relatedParks: [{ parkCode: "glba", fullName: "Glacier Bay National Park & Preserve" }],
+              images: [{ url: "https://www.nps.govhttps://www.nps.gov/common/uploads/cropped_image/lagoon.jpg" }]
+            }
+          ]
+        }), { status: 200 })
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.source.sourceName).toBe("Bartlett Cove Lagoon and Fairweather Range");
+      expect(result.source.sourceType).toBe("live_camera");
+      expect(result.source.imageUrl).toBe("https://www.nps.gov/common/uploads/cropped_image/lagoon.jpg");
+    }
+  });
 });
 
 describe("graph mapping", () => {

@@ -99,7 +99,7 @@ For this project, the UI must make these facts visible without explanation:
 | GitHub issues | Created |
 | GitHub Project | Created at https://github.com/users/rahshank/projects/1; private by GitHub default |
 | NPS live source | Passed for Yosemite Falls |
-| Groq extraction | Key added locally; real extraction still needs verification |
+| Groq extraction | Real extraction passed for Yosemite Falls and Bartlett Cove; UI model-run detail still needs completion |
 | Neo4j | Not yet running |
 | Design pass | In progress |
 
@@ -116,5 +116,6 @@ Detailed comparison: [Agentic Practice Comparison](Agentic_Practice_Comparison.m
 - GitHub secret scanning: https://docs.github.com/en/code-security/concepts/secret-security/secret-scanning
 
 ## Change log
+- 2026-06-27: Updated Groq status after successful real extractions against Yosemite Falls and Bartlett Cove.
 - 2026-06-27: Updated current status after creating the GitHub Project through the browser UI.
 - 2026-06-27: Created first project operating standard after the GitHub/process gap and credential-handling incident.
