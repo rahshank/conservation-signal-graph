@@ -41,6 +41,8 @@ Expected: failure because the current Neo4j repository writes only part of the g
 
 Update `Neo4jGraphRepository` so `writeObservation()` merges every node and relationship from `buildGraphSnapshot(source, observation)`.
 
+Code review addition: namespace all persisted nodes with `ConservationSignalGraph`, match relationship endpoints only inside that namespace, and read snapshots only from that namespace. This keeps the prototype safe against unrelated data when using an existing Neo4j database.
+
 Update `snapshot()` so it reads from Neo4j:
 
 ```cypher
@@ -81,6 +83,8 @@ Ensure `npm run graph:probe` prints JSON with:
 - `nodes`
 - `relationships`
 - relationship type counts
+
+Code review addition: the probe forces `CSG_FORCE_FIXTURE=0` so the graph persistence proof is not disabled by fixture extraction mode.
 
 - [ ] **Step 2: Start local Neo4j**
 
@@ -127,9 +131,11 @@ npm run test:e2e
 
 Expected: all checks pass.
 
-- [ ] **Step 2: Request code review**
+- [x] **Step 2: Request code review**
 
 Review the branch diff against `main`. Check for persistence bugs, graph contract gaps, missing evidence, and unsafe local Neo4j assumptions.
+
+Result on 2026-06-27: review found missing app namespace isolation and missing `CSG_FORCE_FIXTURE=0` proof guidance. Both were fixed.
 
 - [ ] **Step 3: Commit and push**
 

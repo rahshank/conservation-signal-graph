@@ -24,6 +24,7 @@ const KNOWN_RELATIONSHIP_TYPES: GraphRelationship["type"][] = [
   "SUPPORTED_BY",
   "GENERATED_IN_RUN"
 ];
+const APP_NAMESPACE_LABEL = "ConservationSignalGraph";
 
 export interface GraphRepository {
   mode: "neo4j" | "memory";
@@ -62,14 +63,16 @@ export class Neo4jGraphRepository implements GraphRepository {
         for (const node of graph.nodes) {
           await tx.run(
             `
-            MERGE (node:${node.kind} {id: $id})
+            MERGE (node:${APP_NAMESPACE_LABEL}:${node.kind} {id: $id})
               SET node.label = $label,
-                  node.confidence = $confidence
+                  node.confidence = $confidence,
+                  node.app = $app
             `,
             {
               id: node.id,
               label: node.label,
-              confidence: node.confidence ?? null
+              confidence: node.confidence ?? null,
+              app: APP_NAMESPACE_LABEL
             }
           );
         }
@@ -77,8 +80,8 @@ export class Neo4jGraphRepository implements GraphRepository {
         for (const relationship of graph.relationships) {
           await tx.run(
             `
-            MATCH (from {id: $from})
-            MATCH (to {id: $to})
+            MATCH (from:${APP_NAMESPACE_LABEL} {id: $from})
+            MATCH (to:${APP_NAMESPACE_LABEL} {id: $to})
             MERGE (from)-[relationship:${relationship.type}]->(to)
               SET relationship.confidence = $confidence
             `,
@@ -103,16 +106,22 @@ export class Neo4jGraphRepository implements GraphRepository {
         const nodes = await tx.run(
           `
           MATCH (node)
-          WHERE any(label IN labels(node) WHERE label IN $knownKinds)
-          RETURN node.id AS id, node.label AS label, labels(node)[0] AS kind, node.confidence AS confidence
+          WHERE $appLabel IN labels(node)
+            AND any(label IN labels(node) WHERE label IN $knownKinds)
+          RETURN node.id AS id,
+                 node.label AS label,
+                 [label IN labels(node) WHERE label IN $knownKinds][0] AS kind,
+                 node.confidence AS confidence
           ORDER BY id
           `,
-          { knownKinds: KNOWN_NODE_KINDS }
+          { knownKinds: KNOWN_NODE_KINDS, appLabel: APP_NAMESPACE_LABEL }
         );
         const relationships = await tx.run(
           `
           MATCH (from)-[relationship]->(to)
           WHERE type(relationship) IN $knownTypes
+            AND $appLabel IN labels(from)
+            AND $appLabel IN labels(to)
             AND any(label IN labels(from) WHERE label IN $knownKinds)
             AND any(label IN labels(to) WHERE label IN $knownKinds)
           RETURN from.id AS from, to.id AS to, type(relationship) AS type, relationship.confidence AS confidence
@@ -120,7 +129,8 @@ export class Neo4jGraphRepository implements GraphRepository {
           `,
           {
             knownKinds: KNOWN_NODE_KINDS,
-            knownTypes: KNOWN_RELATIONSHIP_TYPES
+            knownTypes: KNOWN_RELATIONSHIP_TYPES,
+            appLabel: APP_NAMESPACE_LABEL
           }
         );
         return [nodes, relationships] as const;

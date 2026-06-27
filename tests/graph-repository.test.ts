@@ -6,6 +6,7 @@ import { Neo4jGraphRepository } from "../src/server/graph/repository";
 describe("Neo4jGraphRepository", () => {
   it("persists and reads the full observation graph contract", async () => {
     const driver = new FakeNeo4jDriver();
+    driver.seedExternalNode({ id: "source:external", label: "External Source", kind: "Source" });
     const repository = new Neo4jGraphRepository(driver as unknown as Driver);
 
     await repository.writeObservation(fixtureSourceEvent, fixtureObservation);
@@ -28,6 +29,7 @@ describe("Neo4jGraphRepository", () => {
         "RAISES_QUESTION"
       ])
     );
+    expect(snapshot.nodes.some((node) => node.id === "source:external")).toBe(false);
   });
 });
 
@@ -35,9 +37,13 @@ class FakeNeo4jDriver {
   readQueries = 0;
 
   private readonly graph = {
-    nodes: new Map<string, { id: string; label: string; kind: string; confidence?: number }>(),
+    nodes: new Map<string, { id: string; label: string; kind: string; confidence?: number; app?: string }>(),
     relationships: new Map<string, { from: string; to: string; type: string; confidence?: number }>()
   };
+
+  seedExternalNode(node: { id: string; label: string; kind: string; confidence?: number; app?: string }) {
+    this.graph.nodes.set(node.id, node);
+  }
 
   session(): Pick<Session, "executeRead" | "executeWrite" | "close"> {
     return {
@@ -60,13 +66,14 @@ class FakeNeo4jDriver {
 
   private run(query: string, params: RecordShape): QueryResult {
     if (query.includes("MERGE (node:")) {
-      const kind = query.match(/MERGE \(node:([A-Za-z]+) \{id: \$id\}\)/)?.[1];
+      const kind = query.match(/MERGE \(node:ConservationSignalGraph:([A-Za-z]+) \{id: \$id\}\)/)?.[1];
       if (kind) {
         this.graph.nodes.set(params.id as string, {
           id: params.id as string,
           label: params.label as string,
           kind,
-          confidence: (params.confidence ?? undefined) as number | undefined
+          confidence: (params.confidence ?? undefined) as number | undefined,
+          app: params.app as string
         });
       }
       return result([]);
@@ -86,22 +93,30 @@ class FakeNeo4jDriver {
     }
     if (query.includes("RETURN node.id AS id")) {
       return result(
-        Array.from(this.graph.nodes.values()).map((node) => ({
-          id: node.id,
-          label: node.label,
-          kind: node.kind,
-          confidence: node.confidence
-        }))
+        Array.from(this.graph.nodes.values())
+          .filter((node) => node.app === params.appLabel)
+          .map((node) => ({
+            id: node.id,
+            label: node.label,
+            kind: node.kind,
+            confidence: node.confidence
+          }))
       );
     }
     if (query.includes("RETURN from.id AS from")) {
       return result(
-        Array.from(this.graph.relationships.values()).map((relationship) => ({
-          from: relationship.from,
-          to: relationship.to,
-          type: relationship.type,
-          confidence: relationship.confidence
-        }))
+        Array.from(this.graph.relationships.values())
+          .filter((relationship) => {
+            const from = this.graph.nodes.get(relationship.from);
+            const to = this.graph.nodes.get(relationship.to);
+            return from?.app === params.appLabel && to?.app === params.appLabel;
+          })
+          .map((relationship) => ({
+            from: relationship.from,
+            to: relationship.to,
+            type: relationship.type,
+            confidence: relationship.confidence
+          }))
       );
     }
     return result([]);
