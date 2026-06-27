@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Camera-trap fixture frame</title>
+  <desc id="desc">Stylized night camera-trap frame used when no permitted live image is configured.</desc>
+  <rect width="1200" height="800" fill="#111611"/>
+  <path d="M0 590 C170 540 330 630 510 580 C710 525 870 535 1200 470 L1200 800 L0 800 Z" fill="#263b2b"/>
+  <path d="M0 660 C260 600 430 700 690 635 C890 585 1030 620 1200 570 L1200 800 L0 800 Z" fill="#18281f"/>
+  <circle cx="945" cy="145" r="78" fill="#e7d287"/>
+  <circle cx="966" cy="126" r="78" fill="#111611"/>
+  <g opacity=".65" stroke="#6e7b5e" stroke-width="18" stroke-linecap="round">
+    <path d="M155 610 L175 335"/>
+    <path d="M220 630 L258 405"/>
+    <path d="M1000 615 L970 350"/>
+    <path d="M1068 650 L1115 390"/>
+  </g>
+  <g transform="translate(520 455)">
+    <ellipse cx="110" cy="72" rx="128" ry="54" fill="#5d4d3c"/>
+    <circle cx="230" cy="52" r="46" fill="#5d4d3c"/>
+    <path d="M18 60 C-50 22 -72 54 -55 98 C-34 150 20 115 36 82" fill="#4c4034"/>
+    <path d="M45 116 L28 210" stroke="#3c332d" stroke-width="22" stroke-linecap="round"/>
+    <path d="M154 116 L147 214" stroke="#3c332d" stroke-width="22" stroke-linecap="round"/>
+    <path d="M226 90 L258 190" stroke="#3c332d" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="242" cy="43" r="8" fill="#f0d36f"/>
+  </g>
+  <g fill="#ffffff" opacity=".48">
+    <circle cx="170" cy="120" r="2"/>
+    <circle cx="260" cy="88" r="2"/>
+    <circle cx="430" cy="160" r="2"/>
+    <circle cx="780" cy="78" r="2"/>
+    <circle cx="1060" cy="220" r="2"/>
+  </g>
+</svg>
