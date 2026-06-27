@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, Cpu, Database, GitBranch, Play, RadioTower, RotateCw, ShieldCheck } from "lucide-react";
+import { Activity, AlertTriangle, Clock, Cpu, Database, FileCheck, GitBranch, Image, Link, Play, RadioTower, RotateCw, ShieldCheck } from "lucide-react";
 import type { DashboardState, GraphNode } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
 
@@ -117,6 +117,10 @@ export function App() {
             <div><dt>Source</dt><dd>{latest.source.sourceName}</dd></div>
             <div><dt>Place</dt><dd>{latest.source.locationLabel}</dd></div>
             <div><dt>Terms</dt><dd>{latest.source.termsStatus.replace("_", " ")}</dd></div>
+            <div>
+              <dt>Review</dt>
+              <dd>{latest.source.sourcePageUrl ? <a href={latest.source.sourcePageUrl}>{displayUrl(latest.source.sourcePageUrl)}</a> : "No review URL"}</dd>
+            </div>
           </dl>
         </div>
 
@@ -156,6 +160,45 @@ export function App() {
           </div>
         </div>
 
+        <div className="panel runPanel" aria-label="Model run details">
+          <div className="panelHeader">
+            <div>
+              <h2>Run Details</h2>
+              <p>Model, validation, source trace, and submitted frame</p>
+            </div>
+            <FileCheck size={18} />
+          </div>
+          <dl className="detailGrid">
+            <DetailItem icon={<Cpu size={15} />} label="Model" value={latest.observation.model} />
+            <DetailItem icon={<FileCheck size={15} />} label="Prompt" value={latest.observation.promptVersion} />
+            <DetailItem icon={<Clock size={15} />} label="Latency" value={`${latest.observation.latencyMs} ms`} />
+            <DetailItem icon={<ShieldCheck size={15} />} label="Validation" value={latest.observation.validationStatus} />
+            <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
+            <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
+            <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={state.metrics.extractionMode} />
+            <DetailItem icon={<Link size={15} />} label="Source URL" value={latest.source.imageUrl ? displayUrl(latest.source.imageUrl) : "Fixture asset"} />
+          </dl>
+
+          <section className="frameProcessing" aria-label="Frame processing metadata">
+            <div className="subhead">
+              <Image size={16} />
+              <h3>Frame Processing</h3>
+            </div>
+            {latest.observation.frameProcessing ? (
+              <dl className="detailGrid compact">
+                <DetailItem label="Original" value={formatDimensions(latest.observation.frameProcessing.originalWidth, latest.observation.frameProcessing.originalHeight)} />
+                <DetailItem label="Original bytes" value={formatBytes(latest.observation.frameProcessing.originalBytes)} />
+                <DetailItem label="Submitted" value={formatDimensions(latest.observation.frameProcessing.submittedWidth, latest.observation.frameProcessing.submittedHeight)} />
+                <DetailItem label="Submitted bytes" value={formatBytes(latest.observation.frameProcessing.submittedBytes)} />
+                <DetailItem label="Resized" value={latest.observation.frameProcessing.resized ? "Yes" : "No"} />
+                <DetailItem label="Reason" value={latest.observation.frameProcessing.reason.replace("_", " ")} />
+              </dl>
+            ) : (
+              <p className="emptyDetail">No frame-normalization record for fixture mode.</p>
+            )}
+          </section>
+        </div>
+
         <div className="panel queryPanel">
           <div className="panelHeader">
             <div>
@@ -170,6 +213,15 @@ export function App() {
         </div>
       </section>
     </main>
+  );
+}
+
+function DetailItem({ icon, label, value }: { icon?: ReactNode; label: string; value: string }) {
+  return (
+    <div>
+      <dt>{icon}{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }
 
@@ -218,6 +270,25 @@ function QueryResult({ label, nodes }: { label: string; nodes: GraphNode[] }) {
       )}
     </div>
   );
+}
+
+function displayUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return `${url.hostname}${url.pathname}`;
+  } catch {
+    return value;
+  }
+}
+
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+  return `${value} B`;
+}
+
+function formatDimensions(width: number, height: number) {
+  return `${width} x ${height}`;
 }
 
 function groupNodesByKind(nodes: GraphNode[]): Partial<Record<GraphNode["kind"], GraphNode[]>> {
