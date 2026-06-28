@@ -13,15 +13,16 @@ This prototype tests that path with Groq and Neo4j. Groq handles the fast infere
 - The dashboard runs locally.
 - Fixture events become structured observations.
 - Observations become graph nodes and relationships.
-- The live-source gate is visible in the product.
+- The source gate is documented, and the product needs a cadence probe before a public source claim.
 - Tests cover schema validation, graph mapping, and dashboard rendering.
 
 ## What remains
 
-- Add an NPS API key or another permissioned source.
-- Run a real live-source probe.
+- Build and run the source-cadence probe against permissioned candidates.
+- Record freshness, update cadence, image hashes, and source terms.
 - Capture latency and extraction quality from real Groq calls.
 - Write the first public evidence bundle.
 
 ## Change log
+- 2026-06-28: Updated the case-study draft after the NPS path failed the current-source proof.
 - 2026-06-27: Created first public case-study draft.

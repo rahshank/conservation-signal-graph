@@ -3,10 +3,10 @@
 ## Purpose
 Define how this project is run when an AI agent is doing real product work.
 
-The standard is simple: product-process claims must correspond to working systems. A GitHub Project means an actual GitHub Project. A CI claim means a workflow that runs. A live-source claim means a verified source. A Groq claim means a real Groq call. A Neo4j claim means Neo4j is running and queried.
+The standard is simple: product-process claims must correspond to working systems. A GitHub Project means an actual GitHub Project. A CI claim means a workflow that runs. A source claim means verified access, permission, freshness, and cadence. A Groq claim means a real Groq call. A Neo4j claim means Neo4j is running and queried.
 
 ## Current Read: June 2026
-Agentic development has moved beyond code completion. The current pattern is delegated work across requirements, architecture, implementation, testing, review, operations, and maintenance. That raises the bar: the agent needs a harness around context, permissions, logs, tests, and human approval, not only the ability to write code.
+Agentic development now covers delegated work across requirements, architecture, implementation, testing, review, operations, and maintenance. That raises the bar: the agent needs a harness around context, permissions, logs, tests, human approval, and code generation.
 
 For this project, the harness is:
 
@@ -98,8 +98,8 @@ For this project, the UI must make these facts visible without explanation:
 | GitHub repository | Created and pushed |
 | GitHub issues | Created |
 | GitHub Project | Created at https://github.com/users/rahshank/projects/1; private by GitHub default |
-| NPS live source | Passed for Yosemite Falls |
-| Groq extraction | Real extraction passed for Yosemite Falls and Bartlett Cove; UI model-run detail still needs completion |
+| Source cadence | Open; NPS image access is not enough, PhenoCam is the leading cadence candidate |
+| Groq extraction | Real extraction passed on image inputs; speed claim waits for cadence proof |
 | Neo4j | Not yet running |
 | Design pass | In progress |
 

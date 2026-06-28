@@ -24,12 +24,12 @@ The standard here is concrete: the project should have visible work tracking, sa
 
 | Area | Modern bar | Current project state | Required change |
 | --- | --- | --- | --- |
-| External work tracking | Repo, issues, project board, CI, and PR discipline exist in GitHub, not only in local Markdown. | Repo and issues exist. Project board is blocked on `project` OAuth scope. | Complete GitHub Project setup after safe re-authentication. Add this audit as a tracked issue. |
+| External work tracking | Repo, issues, project board, CI, and PR discipline exist in GitHub and Linear as appropriate, with Markdown as the durable local record. | Repo, issues, GitHub Project, and Linear project exist. | Keep implementation issues tied to spec sections and acceptance criteria. |
 | Harness discipline | Agent work runs through explicit context, permissions, tools, logs, and verification. | Workspace rules and project docs exist. Enforcement is partial. | Add pre-commit/pre-push checks and keep evidence for every external-system action. |
 | Credential handling | Secrets stay in `.env`, OS keychain, GitHub secrets, or provider stores. No helper output or token values appear in logs/docs/issues. | `.env` is ignored and a runbook exists. A local GitHub token exposure occurred during setup. | Rotate the affected GitHub credential, re-auth through GitHub CLI/Git Credential Manager, and use scoped device/browser auth for Projects. |
-| Security testing | Agentic systems are tested for execution-context risk, not only successful final output. | Basic secret scanner added. No third-party scanner, no SECURITY.md, no context-poisoning checks. | Add Gitleaks or TruffleHog, SECURITY.md, and a small malicious-context regression test for docs/prompts/source metadata. |
-| Source-policy claims | Public claims distinguish live source, fixture replay, and blocked source attempts. | NPS Yosemite Falls live-source gate passed. Explore.org is documented as restricted unless permission exists. | Add a second source candidate and evidence note; UI must label source mode clearly. |
-| Groq claim | A Groq claim requires an actual Groq call with model, prompt version, latency, validation status, and saved output shape. | Key is local. Real extraction still needs verification. | Run first real vision extraction and record evidence. |
+| Security testing | Agentic systems are tested for execution-context risk and successful final output. | Basic secret scanner added. No third-party scanner, no SECURITY.md, no context-poisoning checks. | Add Gitleaks or TruffleHog, SECURITY.md, and a small malicious-context regression test for docs/prompts/source metadata. |
+| Source-policy claims | Public claims distinguish measured source data, stale source data, fixture replay, and blocked source attempts. | NPS image access is now treated as stale-source risk; PhenoCam is the leading cadence candidate. Explore.org is documented as restricted unless permission exists. | Build the source-cadence probe and make source mode visible in UI and evidence. |
+| Groq claim | A Groq claim requires an actual Groq call with model, prompt version, latency, validation status, and saved output shape. | Real extraction has passed on image inputs. Speed claim still needs measured cadence. | Record Groq latency only after source cadence proves repeated work. |
 | Neo4j claim | A graph claim requires Neo4j running, writes succeeding, and a query proving relationships. | Repository boundary exists; memory graph mode is active. | Start Neo4j locally, write observations, and capture query evidence. |
 | Verification loop | Important claims are checked by deterministic tools, inspired by HERMES-style interleaving of reasoning and verification. | Unit tests and Playwright tests exist. Design pass needs visual evidence. | Run secret scan, build, unit tests, e2e tests, source probe, graph probe, and screenshot checks before public-case-study updates. |
 | Memory and skill loop | Repeated work becomes a reusable runbook or skill. | Credential runbook and product standard exist. | Convert source probing, Groq extraction evidence, Neo4j proof, and GitHub bootstrap into stable routines. |
@@ -78,7 +78,7 @@ The project is past a throwaway demo, but it is not yet at the “best-in-class 
 1. Finish the real GitHub Project.
 2. Rotate and harden credentials.
 3. Prove Groq and Neo4j with saved evidence.
-4. Add security enforcement beyond a local regex scanner.
+4. Add security enforcement with a third-party scanner and prompt/source-metadata regression checks.
 5. Ship only the claims the evidence supports.
 
 ## Change log
