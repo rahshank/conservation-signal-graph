@@ -7,6 +7,8 @@ The prototype needs a source that can produce meaningful recurring observations.
 
 Ethogram Graph should eventually combine source cadence with observer context. A source is stronger when it has a permitted visual route and a permitted context route.
 
+Source selection should stay honest about source purpose. PhenoCam sources are designed for vegetation phenology: fixed-scene images over time, usually analyzed for canopy greenness, seasonal foliage, snow, visibility, and habitat condition. They are strong for cadence and ecological context. They are weak for predictable wildlife behavior unless a specific camera has documented recurring animal presence.
+
 ## Scoring
 
 | Score | Meaning |
@@ -83,7 +85,19 @@ Image normalization is now implemented in the product path before Groq vision ca
 
 NPS image URLs are not enough for the product claim. A local scan of image-bearing NPS webcam records found stale image headers, including the Peregrine Falcon image last modified in 2024. The human review page for the Peregrine Falcon stream also showed the live stream recording as unavailable.
 
-PhenoCam is the strongest current candidate for the repeated-ingestion and context-graph portion of the test. It should be treated as ecological monitoring unless a wildlife-focused, permissioned, current source is found.
+PhenoCam is the strongest current candidate for the repeated-ingestion and context-graph portion of the test. It should be treated as ecological monitoring unless a wildlife-focused, permissioned, current source is found. A PhenoCam-only wall would prove cadence and graph ingestion, not the wildlife-monitoring thesis.
+
+## Source Surface Rule
+
+The main source wall should show working sources. Candidate and benchmark material belongs elsewhere.
+
+| Surface | Role | Examples |
+| --- | --- | --- |
+| Main source wall | Sources with measurable currentness and an allowed capture route | cleared PhenoCam sites; future permissioned wildlife image/video sources |
+| Source lab | Promising sources still under permission, freshness, or capture review | Big Bear, Cornell Bird Cams, Explore.org, NPS wildlife webcams |
+| Test harness | Known-answer images and fixture replay | Channel Islands bird images, LILA-style fixtures |
+
+Operational labels on the main wall should describe source state: `Active`, `Stale`, `Blocked`, `Quiet`, or `Attention`. Research and benchmark labels are still useful, but they should describe source-lab and test-harness material, not primary monitored sources.
 
 ## Supporting Context Candidate
 
@@ -92,6 +106,7 @@ Big Bear is the strongest example for commentary context research. Friends of Bi
 The current decision is research only until a permitted ingestion route is confirmed.
 
 ## Change Log
+- 2026-06-28: Added the source-surface rule and clarified that PhenoCam proves ecological cadence rather than predictable wildlife monitoring.
 - 2026-06-28: Added Big Bear as a source-family candidate for observer-context ingestion.
 - 2026-06-28: Added source cadence to candidate scoring, rejected NPS image URLs as live proof, and promoted PhenoCam active sites for the next gate.
 - 2026-06-27: Added Big Bear as the supporting-context example for future commentary ingestion.

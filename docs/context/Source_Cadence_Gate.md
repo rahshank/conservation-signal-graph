@@ -26,6 +26,22 @@ Ethogram Graph is trying to prove a pipeline: recurring source signal, observer 
 | Explore.org and YouTube-style animal cams | Strong animal behavior, but automated monitoring needs permission or an official route. | Product reference and permission research only. |
 | LILA camera-trap datasets | Good for fixtures and regression tests. Historical, not a live signal. | Use for replay and testing with clear labels. |
 
+## PhenoCam Fit
+
+PhenoCam is a vegetation-phenology source family. The cameras repeatedly capture a fixed scene so researchers can track canopy greenness, seasonal foliage, snow, visibility, and habitat condition over time. That makes PhenoCam strong for cadence measurement and ecological context-graph testing.
+
+PhenoCam is not a predictable wildlife source by default. A PhenoCam site should enter the wildlife story only when it has documented recurring animal presence or useful observer context. Otherwise it belongs in the ecological-monitoring lane.
+
+The current product implication is:
+
+| Claim | PhenoCam can support? | Why |
+| --- | --- | --- |
+| The system can check many sources automatically | Yes | Latest-image URLs, headers, metadata, and daily counts are measurable. |
+| The system can decide whether a frame is fresh enough for inference | Yes | `Last-Modified`, source API dates, and daily counts support freshness observations. |
+| Groq speed matters across repeated source work | Yes | Dozens of images per day across many sources creates repeated inference work. |
+| The prototype proves predictable animal behavior monitoring | No | PhenoCam cameras are aimed at vegetation and habitat change, not animal activity. |
+| The context graph can accumulate ecological observations | Yes | Source, place, vegetation state, weather/visibility, camera health, and repeated changes can become graph evidence. |
+
 ## Implemented Probe
 
 The first implemented cadence path is `GET /api/sources/probe/phenocam` and `npm run source:probe`.
@@ -118,6 +134,7 @@ For Big Bear-style sources, the review might concern whether a visual observatio
 - [NPS developer API documentation](https://www.nps.gov/subjects/developer/api-documentation.htm)
 
 ## Change Log
+- 2026-06-28: Added the PhenoCam fit section to separate ecological cadence proof from predictable wildlife monitoring.
 - 2026-06-28: Added source freshness observations and the inclusion rule for feeds.
 - 2026-06-28: Added the implemented PhenoCam probe route and observer-context gate.
 - 2026-06-28: Created the source-cadence gate after the NPS webcam path failed the current-source proof.
