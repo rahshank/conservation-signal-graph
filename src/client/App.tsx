@@ -107,7 +107,7 @@ export function App() {
           <div>
             <p className="eyebrow">Ecological intelligence graph</p>
             <h1>Ethogram Graph</h1>
-            <p className="heroText">Monitor real source links, build provenance-rich graph memory, and route only exceptions to human judgment.</p>
+            <p className="heroText">Monitor real source links, build provenance-rich graph memory, and surface uncertainty, conflicts, and trust gaps.</p>
           </div>
         </div>
         <div className="heroActions">
@@ -221,7 +221,7 @@ function SourceWorkbench({ source, graphMode }: { source: SourceTile; graphMode:
         <Insight title="Throughput" body={source.throughput} />
         <Insight title="Observer context" body={source.observerContext} />
         <Insight title="Provisional graph state" body={source.graphStatus} />
-        <Insight title="Automation posture" body={graphMode === "batch_queued" ? "Batch queued; graph writes keep confidence, model, source, and timestamp provenance." : "Graph ingestion is automatic for eligible sources; exceptions are routed separately."} />
+        <Insight title="Pipeline state" body={graphMode === "batch_queued" ? "Batch queued with confidence, model, source, and timestamp provenance." : "Eligible sources feed the graph automatically; trust gaps appear in the attention queue."} />
       </div>
     </section>
   );
@@ -232,9 +232,9 @@ function ExceptionQueue({ sources }: { sources: SourceTile[] }) {
   return (
     <section className="workbenchPanel exceptionPanel" aria-label="Exception queue">
       <div className="sectionTitle compact">
-        <p className="eyebrow">Human attention</p>
+        <p className="eyebrow">Attention layer</p>
         <h2>Exception Queue</h2>
-        <span>Humans review exceptions, not every graph edge.</span>
+        <span>Uncertainty, policy blocks, and context conflicts rise for investigation.</span>
       </div>
       <div className="exceptionList">
         {exceptions.map((source) => (

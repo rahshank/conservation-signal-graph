@@ -13,7 +13,7 @@ test("source wall opens as a multi-source intelligence surface", async ({ page }
   await expect(page.getByRole("button", { name: /Cornell Bird Cams/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Aguamarga PhenoCam" })).toBeVisible();
   await expect(page.getByLabel("Selected source workbench").getByText("Provisional graph state")).toBeVisible();
-  await expect(page.getByLabel("Exception queue").getByText("Humans review exceptions, not every graph edge.")).toBeVisible();
+  await expect(page.getByLabel("Exception queue").getByText("Uncertainty, policy blocks, and context conflicts rise for investigation.")).toBeVisible();
   await expect(page.getByLabel("Technical trace").getByText("Groq throughput")).toBeVisible();
 
   const sourceLinks = page.getByTestId("source-link");
