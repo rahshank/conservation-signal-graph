@@ -84,9 +84,9 @@ export function seededDashboardState(): DashboardState {
       extractionMode: "fixture"
     },
     sourceGate: {
-      status: "blocked_missing_key",
-      label: "Source gate",
-      detail: "NPS webcam API probing is implemented, but the unauthenticated endpoint returns API_KEY_MISSING. Add NPS_API_KEY to run the NPS benchmark path."
+      status: "ready_for_probe",
+      label: "Source freshness gate",
+      detail: "Use Find updating sources to check PhenoCam freshness before any Groq inference. NPS remains a separate static image benchmark."
     }
   };
 }

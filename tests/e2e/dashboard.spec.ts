@@ -4,6 +4,7 @@ import { seededDashboardState } from "../../src/server/fixtures";
 test("dashboard renders seeded signal graph and can ingest another event", async ({ page }) => {
   await page.goto("/");
 
+  await expect(page).toHaveTitle("Ethogram Graph");
   await expect(page.getByRole("heading", { name: "Ethogram Graph" })).toBeVisible();
   await expect(page.getByLabel("Source gate")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Signal Under Review" })).toBeVisible();

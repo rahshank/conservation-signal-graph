@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/server/app";
-import { fixtureObservation, fixtureSourceEvent } from "../src/server/fixtures";
+import { fixtureObservation, fixtureSourceEvent, seededDashboardState } from "../src/server/fixtures";
 import { probeNpsWebcamSource, defaultNpsWebcamTitle } from "../src/server/adapters/nps-webcam";
 import { buildGraphSnapshot } from "../src/server/graph/map-observation";
 import type { GraphRepository } from "../src/server/graph/repository";
@@ -13,6 +13,14 @@ describe("source and extraction schemas", () => {
 
   it("validates the fixture extraction", () => {
     expect(extractedObservationSchema.parse(fixtureObservation).validationStatus).toBe("fixture");
+  });
+
+  it("starts with the source-freshness gate instead of the NPS benchmark gate", () => {
+    const state = seededDashboardState();
+    expect(state.sourceGate.status).toBe("ready_for_probe");
+    expect(state.sourceGate.label).toBe("Source freshness gate");
+    expect(state.sourceGate.detail).toContain("Find updating sources");
+    expect(state.sourceGate.detail).not.toContain("NPS_API_KEY");
   });
 });
 
