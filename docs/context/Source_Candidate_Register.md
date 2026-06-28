@@ -5,6 +5,8 @@ Track camera sources by product value, machine access, permission risk, and meas
 
 The prototype needs a source that can produce meaningful recurring observations. Scenic views can prove ingestion. Wildlife-likely views test animal behavior. Ecological time-lapse views can test source cadence, repeated inference, and context-graph accumulation.
 
+Ethogram Graph should eventually combine source cadence with observer context. A source is stronger when it has a permitted visual route and a permitted context route.
+
 ## Scoring
 
 | Score | Meaning |
@@ -26,6 +28,7 @@ The prototype needs a source that can produce meaningful recurring observations.
 | Katmai Brooks Falls Bearcam | High | Medium | NPS record credits Explore.org partnership; automated monitoring may need permission | High for human interest | Research only unless permission path is clear |
 | Katmai River Watch Cam | High | Medium | NPS record credits Explore-style bear camera ecosystem; terms need review | High for wildlife | Research only unless permission path is clear |
 | Channel Islands nest cams | High seasonal | Medium with image normalization | NPS image URL available, but current stream can be unavailable and image freshness can fail | Medium | Use as known-context Groq benchmark only |
+| Big Bear eagle nest ecosystem | High seasonal | Needs permissioned route | Strong public context, but feed and commentary ingestion terms need review | High; official pages, recaps, and public community context exist | Best observer-context research candidate |
 | Elk Prairie at Prairie Creek Redwoods | High | Low now | NPS record did not expose an image URL in first API scan | Medium | Promising, adapter/source route needed |
 
 ## Recommended Next Source
@@ -39,7 +42,7 @@ Why it fits:
 - Image-list paths include timestamped archive images, so cadence can be measured without guessing.
 - The source is licensed through PhenoCam's CC BY 4.0 data policy with attribution.
 
-The product story changes for this source: it is an ecological signal review console, not a wildlife incident console. That is acceptable for the cadence and context-graph test, but it should be named clearly.
+The product story changes for this source: PhenoCam supports ecological source-cadence and graph-accumulation testing. Wildlife behavior testing needs a permissioned wildlife source with a current visual route.
 
 ## Source Selection Rule
 Pick sources in this order:
@@ -84,11 +87,12 @@ PhenoCam is the strongest current candidate for the repeated-ingestion and conte
 
 ## Supporting Context Candidate
 
-Big Bear is the strongest example for commentary context research. Friends of Big Bear Valley maintains official eagle nest pages, livestreams, history, stories, quick references, communities, and recap reports. Public coverage also shows the kind of detail this layer should capture: recurring named animals, nest milestones, and operator explanations around ambiguous behavior.
+Big Bear is the strongest example for commentary context research. Friends of Big Bear Valley maintains official eagle nest pages, livestreams, history, stories, quick references, communities, and recap reports. Public coverage also shows the kind of detail this layer should capture: recurring named animals, nest milestones, unusual visitors, and operator explanations around ambiguous behavior.
 
 The current decision is research only until a permitted ingestion route is confirmed.
 
 ## Change Log
+- 2026-06-28: Added Big Bear as a source-family candidate for observer-context ingestion.
 - 2026-06-28: Added source cadence to candidate scoring, rejected NPS image URLs as live proof, and promoted PhenoCam active sites for the next gate.
 - 2026-06-27: Added Big Bear as the supporting-context example for future commentary ingestion.
 - 2026-06-27: Updated the bird-cam benchmark after product image normalization passed.

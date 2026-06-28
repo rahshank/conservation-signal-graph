@@ -1,13 +1,15 @@
 # Glossary
 
 ## Purpose
-Define the working terms used in the Conservation Signal Graph project.
+Define the working terms used in the Ethogram Graph project.
 
 ## Terms
 
 | Term | Working definition |
 | --- | --- |
 | Groq | An inference provider known for fast model serving. In this project, Groq analyzes camera frames and returns structured observations. |
+| Ethogram | A structured catalog of animal behavior. The term gives the project a scientific anchor for turning repeated observations into behavior-linked graph data. |
+| Ethogram Graph | The working product name for the multi-source wildlife and ecological context graph. |
 | Inference | A model call. The system sends an input such as an image and prompt, and the model returns an output. |
 | Vision model | A model that can inspect images. Here it reads a webcam frame and describes observable conservation signals. |
 | Image normalization | Preparing a source image for model input while preserving traceability. In this project, normalization records the original image URL, dimensions, and byte size, then resizes oversized frames before Groq vision calls. |
@@ -16,6 +18,9 @@ Define the working terms used in the Conservation Signal Graph project.
 | Validation status | The result of checking model output against the schema. Current values are `fixture`, `valid`, and `invalid`. |
 | Fixture | A controlled placeholder used for local development and tests. Fixture output is useful for wiring but does not prove Groq behavior. |
 | Live source | A current or near-current camera/image source. The project labels live sources separately from fixtures. |
+| Periodic snapshot | A source that updates still images at a measured cadence. It can be useful for repeated inference even when it is not a video stream. |
+| Static image benchmark | A known-context image used to test model extraction quality. It does not prove source freshness or Groq speed value. |
+| Source cadence evidence | Freshness and update proof for a source: API dates, headers, daily counts, hashes, timestamps, and observed changes across probes. |
 | Source adapter | Code that turns an external source, such as the NPS webcam API, into the project’s internal `SourceEvent` shape. |
 | Knowledge graph | A connected model of entities and relationships. In this project, sources, frames, observations, species candidates, risks, actions, questions, and model runs become graph nodes. |
 | Neo4j | A graph database. It stores nodes and relationships and supports graph queries. |
@@ -26,10 +31,13 @@ Define the working terms used in the Conservation Signal Graph project.
 | Vector search | Search by embedding similarity. It answers “what is semantically close to this?” rather than exact keyword match. |
 | pgvector | A PostgreSQL extension for storing embeddings and running vector similarity search inside Postgres. It is useful when a system wants semantic retrieval without a separate vector database. |
 | Context graph | The project’s graph of observations plus their supporting source, frame, model run, uncertainty, and review actions. |
+| Observer context | Human-generated context around a source: official notes, moderator updates, recap pages, trusted watcher reports, or API-accessible chat. |
+| Context claim | A normalized claim extracted from observer context and linked back to source text, timestamp or date scope, trust tier, and related graph nodes. |
 | Evidence bundle | The proof record for a claim: source, mode, model, latency, validation status, graph mode, screenshots, and test output. |
 | Graph mode | Whether graph data is stored in memory or Neo4j. `memory` proves UI wiring. `neo4j` proves graph persistence. |
 | Extraction mode | Whether observations came from fixtures or Groq. `fixture` proves wiring. `groq` proves real model inference. |
 
 ## Change Log
+- 2026-06-28: Added Ethogram Graph, periodic snapshots, source cadence evidence, observer context, and context claims.
 - 2026-06-27: Added image normalization.
 - 2026-06-27: Created the first project glossary.

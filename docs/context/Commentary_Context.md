@@ -1,12 +1,12 @@
 # Commentary Context
 
 ## Purpose
-Define the context layer that can turn a camera-only graph into a context graph.
+Define the observer-context layer for Ethogram Graph.
 
 ## Product Idea
-Camera frames show what the model can see at a moment. Commentary adds what people around the camera already know: species names, recurring animals, seasonal milestones, moderator notes, incident reports, and educational context.
+Camera frames show what the model can see at a moment. Observer context adds what people around the source already know: species names, recurring animals, behavior history, seasonal milestones, moderator notes, incident reports, and educational context.
 
-The product should ingest trusted commentary only when the source route is permitted and traceable.
+The product should ingest trusted context only when the access route is permitted and traceable. Context is a first-class input, not a footnote to the camera.
 
 ## Candidate Context Sources
 
@@ -19,9 +19,18 @@ The product should ingest trusted commentary only when the source route is permi
 | Third-party articles | Country Living example naming Fiona the flying squirrel and Dash the mouse | Research context and public narrative cues | Useful for background; avoid treating as operational telemetry |
 
 ## Big Bear Example
-Big Bear is the right mental model for the context layer. The camera may show an eagle nest, while supporting commentary explains that Jackie and Shadow are the resident bald eagles, the site has recurring non-eagle visitors such as Fiona the flying squirrel and Dash the mouse, and the camera operator maintains public educational context around the nest.
+Big Bear is the right mental model for the context layer. The camera may show an eagle nest, while supporting context explains that Jackie and Shadow are the resident bald eagles, the site has recurring non-eagle visitors such as Fiona the flying squirrel and Dash the mouse, and the camera operator maintains public educational context around the nest.
 
 That context should become graph data only when it is source-linked, timestamped or date-scoped, permissioned, and labeled by source type.
+
+## Lifecycle Example
+
+1. A source registry tracks the Big Bear feed, official operator pages, recap pages, and permitted context routes.
+2. The source probe records whether the visual feed is available, current, and technically accessible.
+3. The commentary adapter checks permitted context routes for new moderator notes, official updates, recaps, or API-accessible observer messages.
+4. Groq extracts visual observations from changed frames and structured claims from context text.
+5. Neo4j links observations and claims to source, place, species, named animal, behavior, timestamp, confidence, and uncertainty.
+6. A reviewer inspects conflicts, high-value milestones, and low-confidence claims rather than watching every frame.
 
 ## Graph Shape
 
@@ -50,5 +59,17 @@ A commentary source can enter the product path when all are true:
 - model-extracted claims remain linked to the original text
 - UI separates model inference, official commentary, viewer commentary, and third-party context
 
+## Backlog Item
+Build a trusted commentary ingestion path for one source family.
+
+Acceptance:
+
+- source registry lists the visual feed and permitted context routes
+- one official or moderator source is ingested through an allowed route
+- extracted claims are linked to source text and timestamp or date scope
+- graph output can distinguish model observation from observer context
+- UI shows when context supports or conflicts with a model observation
+
 ## Change Log
+- 2026-06-28: Promoted observer context into the main Ethogram Graph thesis and added a Big Bear lifecycle.
 - 2026-06-27: Created first commentary context backlog note with Big Bear as the reference example.

@@ -70,7 +70,7 @@ export async function probeNpsWebcamSource(options: {
     source: sourceEventSchema.parse({
       sourceId: `nps:${webcam.id ?? parkCode}`,
       sourceName: webcam.title ?? `NPS ${parkCode} webcam`,
-      sourceType: "live_camera",
+      sourceType: "static_image_benchmark",
       capturedAt: new Date().toISOString(),
       imageUrl: normalizeNpsUrl(image.url),
       locationLabel: webcam.relatedParks?.[0]?.fullName ?? `NPS park ${parkCode}`,

@@ -40,7 +40,9 @@ export class SignalStore {
 
   private recalculateMetrics(): void {
     const totalEvents = this.events.length;
-    const liveEvents = this.events.filter((event) => event.source.sourceType === "live_camera").length;
+    const liveEvents = this.events.filter((event) =>
+      ["live_camera", "video_feed", "periodic_snapshot"].includes(event.source.sourceType)
+    ).length;
     const fixtureEvents = totalEvents - liveEvents;
     const averageLatencyMs =
       this.events.reduce((total, event) => total + event.observation.latencyMs, 0) / Math.max(totalEvents, 1);

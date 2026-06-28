@@ -1,12 +1,26 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Database, Eye, FileCheck, GitBranch, Image, Link, ListChecks, Play, RadioTower, ShieldCheck, XCircle } from "lucide-react";
-import type { DashboardState, GraphNode, GraphRelationship } from "../shared/schema";
+import type { DashboardState, GraphNode, GraphRelationship, SourceCadenceEvidence } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
+
+type CadenceProbeResult = {
+  results: Array<
+    | { ok: true; evidence: SourceCadenceEvidence }
+    | { ok: false; sourceId: string; status: "fetch_failed"; detail: string }
+  >;
+  summary: {
+    totalSources: number;
+    cadenceCandidates: number;
+    staleSnapshots: number;
+    failed: number;
+  };
+};
 
 export function App() {
   const [state, setState] = useState<DashboardState>(seededDashboardState());
   const [status, setStatus] = useState("Seeded demo state");
   const [reviewDecision, setReviewDecision] = useState("Awaiting monitor review");
+  const [cadenceProbe, setCadenceProbe] = useState<CadenceProbeResult | null>(null);
 
   useEffect(() => {
     void refreshState();
@@ -37,23 +51,36 @@ export function App() {
   }
 
   async function ingestNps() {
-    setStatus("Analyzing bird camera with Groq...");
+    setStatus("Analyzing NPS benchmark image...");
     const response = await fetch("/api/events/ingest/nps", { method: "POST" });
     if (!response.ok) {
       const body = await response.json().catch(() => null);
       await refreshState();
-      setStatus(body?.detail ? `Bird camera analysis failed: ${body.detail}` : `Bird camera analysis failed: HTTP ${response.status}`);
+      setStatus(body?.detail ? `NPS benchmark failed: ${body.detail}` : `NPS benchmark failed: HTTP ${response.status}`);
       return;
     }
     setState((await response.json()) as DashboardState);
     setReviewDecision("Awaiting monitor review");
-    setStatus("Bird camera analyzed");
+    setStatus("NPS benchmark analyzed");
+  }
+
+  async function probeCadenceSources() {
+    setStatus("Checking source cadence...");
+    const response = await fetch("/api/sources/probe/phenocam");
+    if (!response.ok) {
+      setStatus(`Source cadence check failed: HTTP ${response.status}`);
+      return;
+    }
+    const result = (await response.json()) as CadenceProbeResult;
+    setCadenceProbe(result);
+    await refreshState();
+    setStatus(`${result.summary.cadenceCandidates} updating source candidates found`);
   }
 
   const latest = state.events[0];
   const groupedNodes = useMemo(() => groupNodesByKind(state.graph.nodes), [state.graph.nodes]);
   const latestConfidence = Math.round(latest.observation.confidence * 100);
-  const isLive = latest.source.sourceType === "live_camera";
+  const isMeasuredSource = ["live_camera", "video_feed", "periodic_snapshot"].includes(latest.source.sourceType);
   const currentExtractionMode = latest.observation.validationStatus === "valid" ? "groq" : "fixture";
 
   useEffect(() => {
@@ -67,34 +94,35 @@ export function App() {
           <div className="mark"><RadioTower size={24} /></div>
           <div>
             <p className="eyebrow">Protected-area signal review</p>
-            <h1>Conservation Signal Graph</h1>
+            <h1>Ethogram Graph</h1>
           </div>
         </div>
         <div className="commandCluster">
           <div className="modeStrip" aria-label="Proof modes">
-            <span>Source: {isLive ? "live camera" : "fixture"}</span>
+            <span>Source: {displaySourceType(latest.source.sourceType)}</span>
             <span>Extraction: {currentExtractionMode}</span>
             <span>Graph: {state.metrics.graphMode}</span>
             <span>Validation: {latest.observation.validationStatus}</span>
           </div>
           <div className="commandActions">
-            <button className="primary" onClick={ingestNps} title="Fetch the current bird-camera frame and analyze it with Groq"><RadioTower size={16} />Analyze bird camera</button>
+            <button className="primary" onClick={probeCadenceSources} title="Check permissioned sources for freshness and update cadence"><RadioTower size={16} />Find updating sources</button>
           </div>
           <div className="testActions" aria-label="Test controls">
-            <button onClick={ingestFixture} title="Load the fixed fixture used for regression testing"><Play size={16} />Load test fixture</button>
+            <button onClick={ingestNps} title="Run Groq on a known-context NPS benchmark image; this is not a live-feed proof"><Image size={16} />Analyze NPS benchmark</button>
+            <button onClick={ingestFixture} title="Load the fixed fixture used for regression testing"><Play size={16} />Load fixture replay</button>
           </div>
         </div>
       </section>
 
       <section className="statusRail" aria-label="System status">
         <Metric icon={<Activity size={17} />} label="Events" value={state.metrics.totalEvents.toString()} />
-        <Metric icon={<RadioTower size={17} />} label="Live source" value={state.metrics.liveEvents.toString()} />
+        <Metric icon={<RadioTower size={17} />} label="Measured sources" value={state.metrics.liveEvents.toString()} />
         <Metric icon={<GitBranch size={17} />} label="Graph" value={state.metrics.graphMode} />
         <Metric icon={<Cpu size={17} />} label="Current extraction" value={currentExtractionMode} />
         <Metric icon={<Database size={17} />} label="Latency" value={`${state.metrics.averageLatencyMs} ms`} />
       </section>
 
-      <section className="gate" aria-label="Live source gate">
+      <section className="gate" aria-label="Source gate">
         <div className="gateCopy">
           <ShieldCheck size={20} />
           <div>
@@ -106,9 +134,10 @@ export function App() {
       </section>
 
       <section className="workspace reviewWorkspace" aria-label="Monitoring workspace">
-        <SignalUnderReview latest={latest} isLive={isLive} latestConfidence={latestConfidence} />
+        <SignalUnderReview latest={latest} isMeasuredSource={isMeasuredSource} latestConfidence={latestConfidence} />
         <AIObservation latest={latest} latestConfidence={latestConfidence} />
         <ReviewDecision decision={reviewDecision} onDecision={setReviewDecision} />
+        {cadenceProbe && <CadenceCandidates probe={cadenceProbe} />}
         <ContextGraph nodes={state.graph.nodes} relationships={state.graph.relationships} />
         <EvidenceTrace latest={latest} state={state} latestConfidence={latestConfidence} currentExtractionMode={currentExtractionMode} />
         <SignalQueue events={state.events} status={status} groupedNodes={groupedNodes} />
@@ -117,9 +146,9 @@ export function App() {
   );
 }
 
-function SignalUnderReview({ latest, isLive, latestConfidence }: {
+function SignalUnderReview({ latest, isMeasuredSource, latestConfidence }: {
   latest: DashboardState["events"][number];
-  isLive: boolean;
+  isMeasuredSource: boolean;
   latestConfidence: number;
 }) {
   return (
@@ -129,7 +158,7 @@ function SignalUnderReview({ latest, isLive, latestConfidence }: {
           <p className="eyebrow">Current camera signal</p>
           <h2>Signal Under Review</h2>
         </div>
-        <span className={isLive ? "sourceBadge live" : "sourceBadge fixture"}>{latest.source.sourceType.replace("_", " ")}</span>
+        <span className={isMeasuredSource ? "sourceBadge live" : "sourceBadge fixture"}>{displaySourceType(latest.source.sourceType)}</span>
       </div>
       <div className="frame">
         <img src={latest.source.imageUrl ?? "/fixture-frame.svg"} alt={latest.source.sourceName} />
@@ -147,6 +176,46 @@ function SignalUnderReview({ latest, isLive, latestConfidence }: {
           <dd>{latest.source.sourcePageUrl ? <a href={latest.source.sourcePageUrl}>{displayUrl(latest.source.sourcePageUrl)}</a> : "No review URL"}</dd>
         </div>
       </dl>
+    </section>
+  );
+}
+
+function CadenceCandidates({ probe }: { probe: CadenceProbeResult }) {
+  return (
+    <section className="panel cadencePanel" aria-label="Source cadence candidates">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Source cadence</p>
+          <h2>Updating Source Candidates</h2>
+        </div>
+        <span>{probe.summary.cadenceCandidates} / {probe.summary.totalSources} passed</span>
+      </div>
+      <div className="eventList">
+        {probe.results.map((result) => {
+          if (!result.ok) {
+            return (
+              <article className="event" key={result.sourceId}>
+                <div>
+                  <h3>{result.sourceId}</h3>
+                  <p>{result.detail}</p>
+                </div>
+                <span className="sourceBadge fixture">failed</span>
+              </article>
+            );
+          }
+          return (
+            <article className="event" key={result.evidence.sourceId}>
+              <div>
+                <h3>{result.evidence.sourceName}</h3>
+                <p>{result.evidence.cadenceSummary}</p>
+              </div>
+              <span className={result.evidence.status === "cadence_candidate" ? "sourceBadge live" : "sourceBadge fixture"}>
+                {result.evidence.status.replace("_", " ")}
+              </span>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -423,6 +492,10 @@ function displayGateStatus(status: DashboardState["sourceGate"]["status"]) {
     ready_for_probe: "ready"
   };
   return labels[status];
+}
+
+function displaySourceType(sourceType: DashboardState["events"][number]["source"]["sourceType"]) {
+  return sourceType.replaceAll("_", " ");
 }
 
 function groupNodesByKind(nodes: GraphNode[]): Partial<Record<GraphNode["kind"], GraphNode[]>> {

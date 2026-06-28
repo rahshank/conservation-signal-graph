@@ -15,7 +15,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`Conservation Signal Graph running at http://127.0.0.1:${port}`);
+  console.log(`Ethogram Graph running at http://127.0.0.1:${port}`);
 });
 
 process.on("SIGTERM", shutdown);

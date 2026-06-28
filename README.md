@@ -1,22 +1,27 @@
-# Conservation Signal Graph
+# Ethogram Graph
 
 ## Purpose
-Build a public-quality Groq + Neo4j prototype for protected-area monitoring.
+Build a public-quality Groq + Neo4j prototype for multi-feed ecological and wildlife observation.
 
-A camera or near-live source enters the system. Groq turns the frame into structured observations. Neo4j stores the observation as a context graph. The UI shows incoming events, source status, graph relationships, confidence, unresolved risks, and response cues.
+Many recurring sources enter the system: periodic ecological cameras, permissioned wildlife feeds, benchmark images, and trusted observer context. Groq turns visual and text inputs into structured observations. Neo4j stores those observations, claims, sources, places, species candidates, behaviors, uncertainties, and review decisions as a context graph.
+
+Working product name: **Ethogram Graph**. An ethogram is a structured catalog of animal behavior. The name fits the larger thesis: repeated observations across many sources become a graph of behavior, evidence, context, and uncertainty.
 
 ## Current status
 The prototype scaffold is implemented with:
 
 - TypeScript server and React dashboard
-- NPS live-source probe with explicit webcam targeting
+- NPS source probe with explicit stale/live boundary
+- PhenoCam cadence probe for permissioned, frequently updating ecological snapshots
 - Groq extraction boundary
 - Neo4j graph repository boundary
 - Fixture extractor for local development
 - Unit tests and Playwright smoke test
-- Source-policy, product, technical, and test docs
+- Source-policy, product, technical, context, and test docs
 
-The first source proof passed with NPS. The current test path targets the NPS Peregrine Falcon Webcam because it has a visible animal and a known species context. Groq and Neo4j remain explicit proof gates: fixture extraction is not a Groq claim, and memory graph mode is not a Neo4j claim.
+The NPS Peregrine Falcon path is now a known-context Groq benchmark, not a live-source proof. The current build path starts with a source-cadence gate over PhenoCam candidates because cadence, freshness, and permission have to be proven before Groq speed claims mean anything.
+
+Groq and Neo4j remain explicit proof gates: fixture extraction is not a Groq claim, memory graph mode is not a Neo4j claim, and a stale image is not a live-feed claim.
 
 Secret handling and GitHub setup: [Secrets And GitHub Setup](docs/Secrets_And_GitHub_Setup.md)
 Agentic product standard: [Agentic Product Development Standard](docs/Agentic_Product_Development_Standard.md)
@@ -48,7 +53,7 @@ npm run test:e2e
 npm run source:probe
 ```
 
-`npm run source:probe` requires `NPS_API_KEY` in `.env`.
+`npm run source:probe` checks PhenoCam cadence candidates and the NPS source path. `NPS_API_KEY` enables the NPS portion; PhenoCam cadence probing does not require the NPS key.
 
 ## Optional Neo4j
 
@@ -82,11 +87,14 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Neo4j graph concepts: https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/
 - NPS API documentation: https://www.nps.gov/subjects/developer/api-documentation.htm
 - NPS API key start: https://www.nps.gov/subjects/developer/get-started.htm
+- PhenoCam API: https://phenocam.nau.edu/webcam/tools/api/
+- PhenoCam fair-use policy: https://phenocam.nau.edu/webcam/fairuse_statement/
 - LILA conservation datasets: https://lila.science/datasets
 - GitHub Projects: https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-28: Renamed the working product to Ethogram Graph and recentered the thesis on many recurring sources plus observer context.
 - 2026-06-27: Switched the default live test path to the NPS Peregrine Falcon Webcam and clarified the UI actions.
 - 2026-06-27: Added persona-led UI story and product reference research links.
 - 2026-06-27: Added Linear as the operating backlog link.

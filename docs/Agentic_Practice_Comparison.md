@@ -1,7 +1,7 @@
 # Agentic Practice Comparison
 
 ## Purpose
-Compare Conservation Signal Graph against current agentic product-development practice as of June 2026.
+Compare Ethogram Graph against current agentic product-development practice as of June 2026.
 
 The standard here is concrete: the project should have visible work tracking, safe credential handling, repeatable verification, source-policy evidence, and public claims that match what actually ran.
 
@@ -39,7 +39,7 @@ The standard here is concrete: the project should have visible work tracking, sa
 
 OpenClaw sets a high bar because it treats the agent as an operating system surface, not as chat wrapped around scripts. The repository exposes the real shape of the work: `.agents`, `.github`, `docs`, `git-hooks`, `qa`, `scripts`, `security`, `skills`, `test`, CI badges, a security policy, onboarding, daemon/gateway behavior, and explicit sandbox guidance.
 
-Conservation Signal Graph now has the beginning of that shape: a repo, issues, CI, tests, source gate, project docs, a credential runbook, and an evidence file. It does not yet meet the OpenClaw bar because the GitHub Project is incomplete, security enforcement is thin, the Groq and Neo4j claims still need live proof, and the design pass has not been visually verified.
+Ethogram Graph now has the beginning of that shape: a repo, issues, CI, tests, source gate, project docs, a credential runbook, and an evidence file. It does not yet meet the OpenClaw bar because the GitHub Project is incomplete, security enforcement is thin, the Groq and Neo4j claims still need live proof, and the design pass has not been visually verified.
 
 The practical lesson is enforcement. More process prose will not fix the gap. The project needs checks that fail when the work is incomplete.
 
@@ -51,7 +51,7 @@ For this project, the equivalent is:
 
 | Claim | Required verifier |
 | --- | --- |
-| “Live source works” | Source probe output, source-policy note, and UI source-mode label |
+| “Measured source works” | Source probe output, source-policy note, and UI source-mode label |
 | “Groq is used” | Real API call, structured validation, model name, prompt version, latency, and extraction mode |
 | “Neo4j is used” | Running Neo4j instance, graph write, graph read, and relationship query |
 | “Design improved” | Desktop and mobile screenshots from the approved Fieldwork UI lane |
@@ -82,5 +82,6 @@ The project is past a throwaway demo, but it is not yet at the “best-in-class 
 5. Ship only the claims the evidence supports.
 
 ## Change log
+- 2026-06-28: Updated the project name to Ethogram Graph.
 - 2026-06-27: Rewrote the comparison as an audit against OpenClaw, HERMES, GitHub Projects, token guidance, secret scanning, and current agentic-security research.
 - 2026-06-27: Created first comparison against OpenClaw, Hermes-style verification patterns, and agentic product-development practice.

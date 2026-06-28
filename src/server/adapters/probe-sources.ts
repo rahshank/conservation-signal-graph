@@ -1,8 +1,21 @@
 import { probeNpsWebcamSource } from "./nps-webcam";
+import { probePhenoCamSites } from "./phenocam";
 
-const result = await probeNpsWebcamSource();
-console.log(JSON.stringify(result, null, 2));
+const phenocamSites = (process.env.PHENOCAM_SITES ?? "aguamarga,barrocolorado,alercecosteroforest")
+  .split(",")
+  .map((site) => site.trim())
+  .filter(Boolean);
 
-if (!result.ok) {
-  process.exitCode = result.status === "missing_key" ? 0 : 1;
+const [nps, phenocam] = await Promise.all([
+  probeNpsWebcamSource(),
+  probePhenoCamSites(phenocamSites)
+]);
+
+console.log(JSON.stringify({
+  nps,
+  phenocam
+}, null, 2));
+
+if (phenocam.summary.cadenceCandidates === 0 && !nps.ok) {
+  process.exitCode = nps.status === "missing_key" ? 0 : 1;
 }

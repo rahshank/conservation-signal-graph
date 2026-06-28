@@ -4,7 +4,7 @@ import { fixtureObservation, fixtureSourceEvent } from "../src/server/fixtures";
 import { probeNpsWebcamSource, defaultNpsWebcamTitle } from "../src/server/adapters/nps-webcam";
 import { buildGraphSnapshot } from "../src/server/graph/map-observation";
 import type { GraphRepository } from "../src/server/graph/repository";
-import { extractedObservationSchema, sourceEventSchema, type GraphSnapshot } from "../src/shared/schema";
+import { extractedObservationSchema, sourceCadenceEvidenceSchema, sourceEventSchema, type GraphSnapshot } from "../src/shared/schema";
 
 describe("source and extraction schemas", () => {
   it("validates the fixture source event", () => {
@@ -49,7 +49,7 @@ describe("live source gate", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.source.sourceName).toBe("Bartlett Cove Lagoon and Fairweather Range");
-      expect(result.source.sourceType).toBe("live_camera");
+      expect(result.source.sourceType).toBe("static_image_benchmark");
       expect(result.source.imageUrl).toBe("https://www.nps.gov/common/uploads/cropped_image/lagoon.jpg");
     }
   });
@@ -116,6 +116,61 @@ describe("production server wiring", () => {
   });
 });
 
+describe("source cadence probe route", () => {
+  it("surfaces PhenoCam cadence evidence without ingesting a frame", async () => {
+    const { app, graphRepository } = await createApp({
+      phenocamProbe: async () => ({
+        results: [
+          {
+            ok: true,
+            evidence: sourceCadenceEvidenceSchema.parse({
+              sourceId: "phenocam:aguamarga",
+              sourceName: "aguamarga",
+              sourceType: "periodic_snapshot",
+              status: "cadence_candidate",
+              checkedAt: "2026-06-28T02:00:00.000Z",
+              latestImageUrl: "https://phenocam.nau.edu/data/latest/aguamarga.jpg",
+              sourcePageUrl: "https://phenocam.nau.edu/webcam/sites/aguamarga/",
+              locationLabel: "Grassland, Balsa Blanca, Almeria, Spain",
+              termsStatus: "permitted",
+              licenseOrTermsRef: "PhenoCam fair-use policy; CC BY 4.0 with attribution.",
+              apiDateLast: "2026-06-26",
+              latestModified: "Sat, 27 Jun 2026 19:49:02 GMT",
+              etag: "\"6a40292e-535c4\"",
+              byteSize: 341444,
+              dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
+              cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
+              recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
+            })
+          }
+        ],
+        summary: {
+          totalSources: 1,
+          cadenceCandidates: 1,
+          staleSnapshots: 0,
+          failed: 0
+        }
+      })
+    });
+
+    const testServer = await listenForTest(app);
+    try {
+      const response = await fetch(`${testServer.baseUrl}/api/sources/probe/phenocam`);
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.summary.cadenceCandidates).toBe(1);
+
+      const snapshotResponse = await fetch(`${testServer.baseUrl}/api/state`);
+      const snapshot = await snapshotResponse.json();
+      expect(snapshot.sourceGate.label).toBe("Source cadence candidates found");
+      expect(snapshot.sourceGate.detail).toContain("1 of 1 PhenoCam sources");
+    } finally {
+      await testServer.close();
+      await graphRepository.close();
+    }
+  });
+});
+
 describe("ingest failure handling", () => {
   it("does not report live ingest success when graph writing fails", async () => {
     const previousNodeEnv = process.env.NODE_ENV;
@@ -144,7 +199,7 @@ describe("ingest failure handling", () => {
           source: sourceEventSchema.parse({
             sourceId: "nps:peregrine",
             sourceName: "Peregrine Falcon Webcam",
-            sourceType: "live_camera",
+            sourceType: "static_image_benchmark",
             capturedAt: "2026-06-27T18:00:00.000Z",
             imageUrl: "https://www.nps.gov/common/uploads/cropped_image/peregrine.jpg",
             locationLabel: "Channel Islands National Park",
@@ -162,7 +217,7 @@ describe("ingest failure handling", () => {
 
         const snapshotResponse = await fetch(`${testServer.baseUrl}/api/state`);
         const snapshot = await snapshotResponse.json();
-        expect(snapshot.sourceGate.label).toBe("Live source ingest failed");
+        expect(snapshot.sourceGate.label).toBe("Source ingest failed");
         expect(snapshot.sourceGate.detail).toContain("graph offline");
       } finally {
         await testServer.close();

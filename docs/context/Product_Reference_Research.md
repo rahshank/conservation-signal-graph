@@ -1,9 +1,9 @@
 # Product Reference Research
 
 ## Purpose
-Ground the Conservation Signal Graph UI in real conservation, monitoring, and review workflows.
+Ground the Ethogram Graph UI in real conservation, monitoring, moderation, and review workflows.
 
-The product should feel like a credible operating surface for reviewing camera signals, not a generic AI dashboard.
+The product should feel like a credible operating surface for source triage, observation review, and context graph inspection.
 
 ## Reference Set
 
@@ -19,18 +19,18 @@ The product should feel like a credible operating surface for reviewing camera s
 | Reference | Design lesson |
 | --- | --- |
 | [Carbon Design System data visualization](https://carbondesignsystem.com/data-visualization/getting-started/) | Data visuals should tell accurate, accessible stories. Graph and metrics views need legibility before decoration. |
-| [GOV.UK Design System patterns](https://design-system.service.gov.uk/patterns/) | Patterns should solve specific user tasks and adapt components to context. The UI should be organized around the protected-area monitor's task, not component variety. |
+| [GOV.UK Design System patterns](https://design-system.service.gov.uk/patterns/) | Patterns should solve specific user tasks and adapt components to context. The UI should be organized around source triage, observation review, and evidence inspection. |
 | [Material Design layout guidance](https://m3.material.io/foundations/layout/understanding-layout/overview) | Responsive layout should preserve hierarchy across screen sizes. Mobile should stack the review task in the same order as desktop. |
 
 ## Product Direction
 
-The next UI pass should test a **Protected-area Signal Review Console**.
+The next UI pass should test an **Observation Graph Workbench**.
 
-Primary user: protected-area monitor.
+Primary users: wildlife camera operator, conservation researcher, moderator, and conservation communications lead.
 
-Primary moment: a new camera signal arrives and needs review.
+Primary moment: a recurring source updates or trusted observer context reports an event worth linking to visual evidence.
 
-Primary question: Is this signal credible, what supports it, what should happen next, and what remains uncertain?
+Primary question: What happened, what supports it, how confident is the system, and what should be reviewed before the claim is used?
 
 Secondary users:
 
@@ -41,11 +41,13 @@ Secondary users:
 
 ## UI Hierarchy To Test
 
-1. Signal under review: frame, source, timestamp, status, source policy.
-2. AI observation: species, risk, action, question, confidence, model trace.
-3. Review decision: accept, needs human review, dismiss as low confidence, watch source.
-4. Context graph: connected source, place, species, risk, action, question, run, and commentary.
-5. Evidence drawer: model, prompt, normalization, latency, graph mode, source URL, test status.
+1. Source cadence: currentness, permission, update interval, and next poll.
+2. Candidate event: frame or snapshot, source, timestamp, status, source policy.
+3. AI observation: species, behavior, risk, action, question, confidence, model trace.
+4. Observer context: official notes, moderator updates, trusted observer claims, conflicts.
+5. Review decision: accept, needs human review, dismiss as low confidence, watch source.
+6. Context graph: connected source, place, species, behavior, risk, action, question, run, and commentary.
+7. Evidence drawer: model, prompt, normalization, latency, graph mode, source URL, test status.
 
 ## Visual Direction
 
@@ -67,4 +69,5 @@ Avoid:
 - graph visuals that look impressive while explaining little
 
 ## Change Log
+- 2026-06-28: Updated product direction from signal review console to observation graph workbench.
 - 2026-06-27: Created the first reference set for the persona-led UI pass.

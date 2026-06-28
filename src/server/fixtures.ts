@@ -85,8 +85,8 @@ export function seededDashboardState(): DashboardState {
     },
     sourceGate: {
       status: "blocked_missing_key",
-      label: "Live source gate",
-      detail: "NPS webcam API probing is implemented, but the unauthenticated endpoint returns API_KEY_MISSING. Add NPS_API_KEY to run the live-source proof."
+      label: "Source gate",
+      detail: "NPS webcam API probing is implemented, but the unauthenticated endpoint returns API_KEY_MISSING. Add NPS_API_KEY to run the NPS benchmark path."
     }
   };
 }

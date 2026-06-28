@@ -4,8 +4,8 @@ import { seededDashboardState } from "../../src/server/fixtures";
 test("dashboard renders seeded signal graph and can ingest another event", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: "Conservation Signal Graph" })).toBeVisible();
-  await expect(page.getByLabel("Live source gate")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ethogram Graph" })).toBeVisible();
+  await expect(page.getByLabel("Source gate")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Signal Under Review" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI Observation" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Review Decision" })).toBeVisible();
@@ -20,10 +20,12 @@ test("dashboard renders seeded signal graph and can ingest another event", async
     "Evidence Trace",
     "Signal Queue"
   ]);
-  await expect(page.getByRole("button", { name: "Analyze bird camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Find updating sources" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Analyze NPS benchmark" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Check bird camera" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Replay test fixture" })).toHaveCount(0);
-  await expect(page.getByLabel("Test controls").getByRole("button", { name: "Load test fixture" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Analyze bird camera" })).toHaveCount(0);
+  await expect(page.getByLabel("Test controls").getByRole("button", { name: "Load fixture replay" })).toBeVisible();
   await expect(page.getByLabel("Proof modes").getByText("Extraction: fixture")).toBeVisible();
   await expect(page.getByLabel("System status").getByText("Current extraction")).toBeVisible();
   await expect(page.getByLabel("System status").getByText("fixture", { exact: true })).toBeVisible();
@@ -50,10 +52,10 @@ test("dashboard renders seeded signal graph and can ingest another event", async
 
   await page.getByRole("button", { name: "Accept observation" }).click();
   await expect(page.getByText("Accepted as observation")).toBeVisible();
-  await page.getByLabel("Test controls").getByRole("button", { name: "Load test fixture" }).click();
+  await page.getByLabel("Test controls").getByRole("button", { name: "Load fixture replay" }).click();
   await expect(page.getByText("Test fixture loaded")).toBeVisible();
   await expect(page.getByText("Awaiting monitor review")).toBeVisible();
-  await expect(page.getByLabel("Proof modes").getByText("Source: fixture")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Source: dataset fixture")).toBeVisible();
   await expect(page.getByLabel("Proof modes").getByText("Extraction: fixture")).toBeVisible();
   await expect(page.getByText("Events")).toBeVisible();
 });
@@ -108,14 +110,71 @@ test("dashboard renders frame normalization metadata from model runs", async ({ 
   await expect(frameMetadata.getByText("oversized dimensions")).toBeVisible();
 });
 
-test("analyze bird camera promotes the Groq live signal into review", async ({ page }) => {
+test("source cadence probe shows updating source candidates before frame analysis", async ({ page }) => {
+  const cadenceState = seededDashboardState();
+  cadenceState.sourceGate = {
+    status: "ready_for_probe",
+    label: "Source cadence candidates found",
+    detail: "1 of 1 PhenoCam sources returned current cadence evidence. 0 stale, 0 failed."
+  };
+
+  await page.route("**/api/state", async (route) => {
+    await route.fulfill({ json: cadenceState });
+  });
+  await page.route("**/api/sources/probe/phenocam", async (route) => {
+    await route.fulfill({
+      json: {
+        results: [
+          {
+            ok: true,
+            evidence: {
+              sourceId: "phenocam:aguamarga",
+              sourceName: "aguamarga",
+              sourceType: "periodic_snapshot",
+              status: "cadence_candidate",
+              checkedAt: "2026-06-28T02:00:00.000Z",
+              latestImageUrl: "https://phenocam.nau.edu/data/latest/aguamarga.jpg",
+              sourcePageUrl: "https://phenocam.nau.edu/webcam/sites/aguamarga/",
+              locationLabel: "Grassland, Balsa Blanca, Almeria, Spain",
+              termsStatus: "permitted",
+              licenseOrTermsRef: "PhenoCam fair-use policy; CC BY 4.0 with attribution.",
+              apiDateLast: "2026-06-26",
+              latestModified: "Sat, 27 Jun 2026 19:49:02 GMT",
+              etag: "\"6a40292e-535c4\"",
+              byteSize: 341444,
+              dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
+              cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
+              recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
+            }
+          }
+        ],
+        summary: {
+          totalSources: 1,
+          cadenceCandidates: 1,
+          staleSnapshots: 0,
+          failed: 0
+        }
+      }
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Find updating sources" }).click();
+
+  await expect(page.getByLabel("Source gate").getByText("Source cadence candidates found", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Updating Source Candidates" })).toBeVisible();
+  await expect(page.getByLabel("Source cadence candidates").getByText("aguamarga", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Source cadence candidates").getByText("38 RGB frames")).toBeVisible();
+});
+
+test("analyze NPS benchmark promotes the Groq known-context image into review", async ({ page }) => {
   const initialState = seededDashboardState();
   const birdState = seededDashboardState();
   birdState.events[0] = {
     source: {
       sourceId: "nps:peregrine-falcon",
       sourceName: "Peregrine Falcon Webcam",
-      sourceType: "live_camera",
+      sourceType: "static_image_benchmark",
       capturedAt: "2026-06-28T02:13:14.404Z",
       imageUrl: "https://www.nps.gov/common/uploads/cropped_image/FCD71ADD-A61D-57A9-C8A70C735880F813.jpg",
       locationLabel: "Channel Islands National Park",
@@ -160,14 +219,14 @@ test("analyze bird camera promotes the Groq live signal into review", async ({ p
   birdState.metrics = {
     ...birdState.metrics,
     totalEvents: 2,
-    liveEvents: 1,
+    liveEvents: 0,
     fixtureEvents: 1,
     averageLatencyMs: 661,
     extractionMode: "groq"
   };
   birdState.sourceGate = {
     status: "ready_for_probe",
-    label: "Bird camera analyzed",
+    label: "NPS benchmark analyzed",
     detail: "Analyzed Peregrine Falcon Webcam with Groq."
   };
 
@@ -179,12 +238,12 @@ test("analyze bird camera promotes the Groq live signal into review", async ({ p
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Analyze bird camera" }).click();
+  await page.getByRole("button", { name: "Analyze NPS benchmark" }).click();
 
-  await expect(page.getByLabel("Live source gate").getByText("Bird camera analyzed", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Source gate").getByText("NPS benchmark analyzed", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Signal under review").getByText("Peregrine Falcon Webcam", { exact: true })).toBeVisible();
   await expect(page.getByLabel("AI observation").getByText("The image shows a Peregrine Falcon in flight.")).toBeVisible();
-  await expect(page.getByLabel("Proof modes").getByText("Source: live camera")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Source: static image benchmark")).toBeVisible();
   await expect(page.getByLabel("Proof modes").getByText("Extraction: groq")).toBeVisible();
   await expect(page.getByLabel("System status").getByText("Current extraction")).toBeVisible();
   await expect(page.getByLabel("System status").getByText("groq", { exact: true })).toBeVisible();

@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type ProbeResult, probeNpsWebcamSource } from "./adapters/nps-webcam";
+import { probePhenoCamSites } from "./adapters/phenocam";
 import { extractObservation } from "./extraction/extractor";
 import { fixtureSourceEvent } from "./fixtures";
 import { createGraphRepository, type GraphRepository } from "./graph/repository";
@@ -13,10 +14,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export async function createApp(options: {
   graphRepository?: GraphRepository;
   npsProbe?: () => Promise<ProbeResult>;
+  phenocamProbe?: () => ReturnType<typeof probePhenoCamSites>;
 } = {}) {
   const app = express();
   const graphRepository = options.graphRepository ?? createGraphRepository();
   const npsProbe = options.npsProbe ?? (() => probeNpsWebcamSource());
+  const phenocamProbe = options.phenocamProbe ?? (() => {
+    const sites = (process.env.PHENOCAM_SITES ?? "aguamarga,barrocolorado,alercecosteroforest")
+      .split(",")
+      .map((site) => site.trim())
+      .filter(Boolean);
+    return probePhenoCamSites(sites);
+  });
   const store = new SignalStore(graphRepository);
 
   app.use(express.json({ limit: "10mb" }));
@@ -43,13 +52,32 @@ export async function createApp(options: {
       store.setSourceGate({
         status: "ready_for_probe",
         label: "Bird camera source ready",
-        detail: `Found ${result.source.sourceName}. Use Analyze bird camera to run Groq on the current frame.`
+        detail: `Found ${result.source.sourceName}. Use the NPS benchmark action to test Groq on the known-context image.`
       });
     } else {
       store.setSourceGate({
         status: result.status === "missing_key" ? "blocked_missing_key" : "fixture_only",
-        label: "Live source gate",
+        label: "Source gate",
         detail: result.detail
+      });
+    }
+    response.json(result);
+  });
+
+  app.get("/api/sources/probe/phenocam", async (_request, response) => {
+    const result = await phenocamProbe();
+    const { totalSources, cadenceCandidates, staleSnapshots, failed } = result.summary;
+    if (cadenceCandidates > 0) {
+      store.setSourceGate({
+        status: "ready_for_probe",
+        label: "Source cadence candidates found",
+        detail: `${cadenceCandidates} of ${totalSources} PhenoCam sources returned current cadence evidence. ${staleSnapshots} stale, ${failed} failed.`
+      });
+    } else {
+      store.setSourceGate({
+        status: "fixture_only",
+        label: "No cadence source passed",
+        detail: `${totalSources} PhenoCam sources checked. ${staleSnapshots} stale, ${failed} failed. Keep the app in fixture or research mode.`
       });
     }
     response.json(result);
@@ -82,14 +110,14 @@ export async function createApp(options: {
       await store.add(result.source, observation);
       store.setSourceGate({
         status: "ready_for_probe",
-        label: "Bird camera analyzed",
+        label: "NPS benchmark analyzed",
         detail: `Analyzed ${result.source.sourceName} with ${observation.validationStatus === "valid" ? "Groq" : "fixture extraction"}.`
       });
       response.json(await store.snapshot());
     } catch (error) {
       store.setSourceGate({
         status: "ingest_failed",
-        label: "Live source ingest failed",
+        label: "Source ingest failed",
         detail: error instanceof Error ? error.message : String(error)
       });
       next(error);

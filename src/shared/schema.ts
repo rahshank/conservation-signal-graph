@@ -3,7 +3,7 @@ import { z } from "zod";
 export const sourceEventSchema = z.object({
   sourceId: z.string().min(1),
   sourceName: z.string().min(1),
-  sourceType: z.enum(["live_camera", "dataset_fixture"]),
+  sourceType: z.enum(["live_camera", "video_feed", "periodic_snapshot", "static_image_benchmark", "dataset_fixture"]),
   capturedAt: z.string().datetime(),
   imageUrl: z.string().url().optional(),
   imageBlobRef: z.string().optional(),
@@ -12,6 +12,30 @@ export const sourceEventSchema = z.object({
   licenseOrTermsRef: z.string().min(1),
   termsStatus: z.enum(["permitted", "requires_key", "requires_permission", "fixture_only"]),
   notes: z.string().optional()
+});
+
+export const sourceCadenceEvidenceSchema = z.object({
+  sourceId: z.string().min(1),
+  sourceName: z.string().min(1),
+  sourceType: z.enum(["video_feed", "periodic_snapshot", "dataset_fixture"]),
+  status: z.enum(["cadence_candidate", "stale_snapshot", "blocked", "fetch_failed"]),
+  checkedAt: z.string().datetime(),
+  latestImageUrl: z.string().url().optional(),
+  sourcePageUrl: z.string().url().optional(),
+  locationLabel: z.string().min(1),
+  termsStatus: z.enum(["permitted", "requires_key", "requires_permission", "fixture_only"]),
+  licenseOrTermsRef: z.string().min(1),
+  apiDateLast: z.string().optional(),
+  latestModified: z.string().optional(),
+  etag: z.string().optional(),
+  byteSize: z.number().int().nonnegative().optional(),
+  dailyCounts: z.array(z.object({
+    localDate: z.string().min(1),
+    rgbCount: z.number().int().nonnegative(),
+    infraredCount: z.number().int().nonnegative()
+  })),
+  cadenceSummary: z.string().min(1),
+  recommendedAction: z.string().min(1)
 });
 
 export const extractedObservationSchema = z.object({
@@ -90,6 +114,7 @@ export const graphSnapshotSchema = z.object({
 });
 
 export type SourceEvent = z.infer<typeof sourceEventSchema>;
+export type SourceCadenceEvidence = z.infer<typeof sourceCadenceEvidenceSchema>;
 export type ExtractedObservation = z.infer<typeof extractedObservationSchema>;
 export type GraphNode = z.infer<typeof graphNodeSchema>;
 export type GraphRelationship = z.infer<typeof graphRelationshipSchema>;

@@ -3,7 +3,7 @@
 ## Purpose
 Define the tactical source test before more product UI work.
 
-The prototype is trying to prove a pipeline: source signal, Groq inference, structured observation, context graph, review decision, and accumulated evidence. Groq speed matters when the source produces repeated work. A stale image can test image handling, but it cannot test the speed-sensitive product idea.
+Ethogram Graph is trying to prove a pipeline: recurring source signal, observer context, Groq inference, structured observation, context graph, review decision, and accumulated evidence. Groq speed matters when sources produce repeated work. A stale image can test image handling, but it cannot test the speed-sensitive product idea.
 
 ## Gate Questions
 
@@ -15,6 +15,7 @@ The prototype is trying to prove a pipeline: source signal, Groq inference, stru
 | Does the source change? | New hash, new timestamp, or new archive path across probes | Same image and same metadata across the test window |
 | Does cadence justify Groq? | Many frames per day, many sources, or several model calls per frame | One manual image per week or stale media record |
 | Does the graph add value? | Observations connect to place, source, history, risks, questions, and review state | A single caption with no useful relationships |
+| Is observer context available? | Official, moderator, API, or trusted watcher context can be linked to the feed | Visual-only source with no durable context path |
 
 ## Current Findings
 
@@ -24,6 +25,22 @@ The prototype is trying to prove a pipeline: source signal, Groq inference, stru
 | PhenoCam | Public API exposes camera metadata, active status, `date_last`, daily counts, latest-image URLs, and image archives. Fair-use policy is CC BY 4.0 with attribution. | Leading candidate for the repeated-ingestion and graph test. Treat as ecological monitoring. |
 | Explore.org and YouTube-style animal cams | Strong animal behavior, but automated monitoring needs permission or an official route. | Product reference and permission research only. |
 | LILA camera-trap datasets | Good for fixtures and regression tests. Historical, not a live signal. | Use for replay and testing with clear labels. |
+
+## Implemented Probe
+
+The first implemented cadence path is `GET /api/sources/probe/phenocam` and `npm run source:probe`.
+
+The probe checks selected PhenoCam sites for:
+
+- active camera metadata
+- `date_last`
+- latest-image headers
+- `Last-Modified`
+- `ETag`
+- byte size
+- recent daily image counts
+
+This proves source cadence before any Groq frame analysis. It also creates a route to test many sources at once.
 
 ## PhenoCam Tactical Candidate
 
@@ -47,7 +64,7 @@ The prototype is trying to prove a pipeline: source signal, Groq inference, stru
 
 ## What Someone Reviews
 
-The monitor reviews an observation, not the camera. A review decision answers:
+The reviewer inspects observations and claims, not the raw feed every second. A review decision answers:
 
 - Did the model correctly describe the current frame?
 - Is the confidence acceptable for the intended use?
@@ -55,6 +72,8 @@ The monitor reviews an observation, not the camera. A review decision answers:
 - Does the system need an action, follow-up question, or human specialist review?
 
 For PhenoCam, the review might concern habitat state, vegetation change, visibility, weather obstruction, fire/smoke signal, flooding, snow cover, or camera health. For a permissioned wildlife cam, the review could concern species, behavior, nest status, injury, human intrusion, or response cue.
+
+For Big Bear-style sources, the review might concern whether a visual observation is supported by official notes, moderator context, or trusted watcher reports.
 
 ## Source Links
 
@@ -65,4 +84,5 @@ For PhenoCam, the review might concern habitat state, vegetation change, visibil
 - [NPS developer API documentation](https://www.nps.gov/subjects/developer/api-documentation.htm)
 
 ## Change Log
+- 2026-06-28: Added the implemented PhenoCam probe route and observer-context gate.
 - 2026-06-28: Created the source-cadence gate after the NPS webcam path failed the current-source proof.
