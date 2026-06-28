@@ -16,9 +16,12 @@ The design uses these references:
 | [Microsoft GraphRAG](https://microsoft.github.io/graphrag/) | GraphRAG extracts entities, relationships, and key claims from source units, then uses graph communities and query modes for reasoning. Ethogram Graph should ingest claims with provenance and use review for exceptions. |
 | [Agentic GraphRAG research](https://arxiv.org/abs/2605.18770) | A modern graph pipeline separates deterministic strong nodes, LLM-derived weak nodes, identity resolution, and human audit surfaces. Ethogram Graph should expose traceability and exceptions without turning humans into edge approvers. |
 | [Neo4j GraphRAG documentation](https://neo4j.com/docs/neo4j-graphrag-python/current/) | GraphRAG systems can combine vector indexes, graph search, and retrievers. Ethogram Graph should keep embeddings and graph retrieval visible as infrastructure. |
-| [Dashboard cooperative-design research](https://arxiv.org/abs/2308.04514) | Dashboards should support monitoring, reporting, interaction, repair, and refinement. The screen should guide a review conversation rather than display disconnected metrics. |
+| [Dashboard cooperative-design research](https://arxiv.org/abs/2308.04514) | Dashboards should support monitoring, reporting, interaction, repair, and refinement. The screen should guide a review conversation and avoid disconnected metrics. |
 | [Dashboard design patterns research](https://arxiv.org/abs/2205.00757) | Dashboard choices need explicit tradeoffs in screen space, interaction, and information hierarchy. Source triage deserves the primary space. |
-| [GOV.UK Design System patterns](https://design-system.service.gov.uk/patterns/) | Patterns should solve specific user tasks. Technical instrumentation should support the task rather than compete with it. |
+| [Grafana dashboard best practices](https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/best-practices/) | A dashboard should answer a question, reduce cognitive load, use drill-downs, avoid unnecessary refresh, and move instructions into documentation or panel descriptions. Ethogram Graph should surface source state and exceptions as measured product state. |
+| [Sentry Issues](https://docs.sentry.io/product/issues/) and [Issue Details](https://docs.sentry.io/product/issues/issue-details/) | High-volume events become useful when grouped, sorted by recency/trend/impact, and opened into detail views with context, tags, traces, and activity. Ethogram Graph should group repeated frames and commentary into source-level findings and exception cases. |
+| [IBM Design Language: Charts](https://www.ibm.com/design/language/data-visualization/charts/) | Comparisons, trends, relationships, and maps each deserve different visual treatments. Source tiles should compare status side by side; freshness and signal volume need trend treatment; graph relationships need a separate relationship view. |
+| [GOV.UK Design System patterns](https://design-system.service.gov.uk/patterns/) | Patterns should solve specific user tasks. Technical instrumentation should support the task and stay visually subordinate. |
 | [PhenoCam fair-use policy](https://phenocam.nau.edu/webcam/fairuse_statement/) | PhenoCam imagery and data provide a permissioned source-cadence path with attribution. Source tiles must show freshness and inclusion rules clearly. |
 
 ## Product Story
@@ -54,6 +57,59 @@ Design rules:
 - Keep source type, freshness, and inference eligibility visible on every tile.
 - Separate source facts, observer context, model read, graph intelligence, and exception handling.
 
+## UI Placement Review
+The first screen should answer five questions:
+
+- Which sources are active, stale, blocked, or research-only?
+- What changed since the last automated poll?
+- Which exceptions need human attention?
+- What is the graph learning across sources?
+- Which source deserves inspection now?
+
+Freshness checking should happen on a timed cadence, on page load, or through a background worker. Manual probe controls belong in a technical or development layer.
+
+### Primary Screen
+| Element | Placement | Reason |
+| --- | --- | --- |
+| Source wall | First screen | The thesis is many monitored sources. The wall gives immediate coverage and source-universe awareness. |
+| Freshness state | Tile badge and selected-source header | Freshness determines whether inference and graph claims are current. Show it as measured state: `Fresh · checked 11:31 AM · image 6 min old · ~38 frames/day`. |
+| Latest change state | Tile body | The useful question is whether the source changed, stayed quiet, or became stale since the last poll. |
+| Exception count and top exception | Primary attention rail | Humans should handle exceptions, conflicts, and public-claim risk. Routine graph evidence should accumulate automatically with provenance. |
+| Emerging graph patterns | Primary intelligence panel | This is the value of a context graph: repeated observations, cross-source connections, observer corroboration, and uncertainty. |
+| Selected source preview | Workbench | Selection should reveal source context, latest observation, observer context, and graph relationships. |
+| Source link and policy cue | Tile plus detail drawer | A short cue belongs on the tile; the full terms and capture basis belong in trace. |
+
+### Secondary Detail
+| Element | Placement | Reason |
+| --- | --- | --- |
+| Groq latency and throughput | Trace strip or drawer | Speed is part of the experiment. The first screen still needs to prioritize ecological signal and graph learning. |
+| Prompt version, model name, validation status | Technical trace | These are audit facts. They should be inspectable without dominating the first impression. |
+| Source adapter, headers, hashes, cadence evidence | Technical trace | Required for evidence and reproducibility. Too dense for the source wall. |
+| Full source-policy notes | Source detail or source-policy file | The UI should show the gate state; the policy reasoning belongs in the evidence trail. |
+| Manual freshness probe | Developer/admin control | Normal use should auto-poll. Manual controls are useful for demos, testing, and recovery. |
+| Raw Neo4j write detail | Technical trace and tests | The primary screen should show graph growth and relationships; raw persistence belongs in trace. |
+
+### Remove From Primary
+| Current copy or control | Replacement |
+| --- | --- |
+| `Ready for freshness probe` | `Pending first check`, `Fresh`, `Recent`, `Stale`, `Blocked`, or `Research route`, with checked time and source age when available. |
+| `Automation posture` | Remove as a box. Represent the same idea through status: automatic source polling, graph ingestion state, and exception routing. |
+| `Find updating sources` as the main call to action | Make polling automatic. Keep a small `Refresh now` control in the technical layer if needed. |
+| `Run inference batch` as the main call to action | Show `Analyze eligible changes` only when there are eligible changed frames, or run automatically in the benchmark path. |
+| Long explanatory panel copy | Use short operating cues, source links, and detail drawers. |
+
+## Next Stories To Review
+These stories can be planned independently and then merged through shared contracts: source model, graph schema, visual system, evidence bundle, tests, and source policy.
+
+| Story | User value | Can run in parallel with |
+| --- | --- | --- |
+| Autonomous source freshness and polling | Sources update without asking the user to perform a probe; the UI shows current state, source age, expected cadence, and next check. | Visual hierarchy, graph detail, Linear/GitHub workflow story |
+| Exception-first intelligence queue | Human attention goes to conflicts, policy blocks, stale sources, public-claim risk, and low confidence. | Polling, graph detail |
+| Graph learning panel | The product shows what the context graph is accumulating: repeated observations, relationships, corroboration, conflicts, and unresolved questions. | Polling, exception queue |
+| Source detail and provenance drawer | Technical evaluators can inspect source URL, terms, freshness basis, model run, prompt version, validation, and graph write evidence. | Primary UI polish |
+| Trusted observer-context ingestion | Big Bear-style official/community commentary becomes a separate context stream with source trust levels and claims linked to visual observations. | Polling once source contracts are stable |
+| Parallel agentic story lanes | The team can run design, backend, graph, research, and verification work in parallel while preserving coherent specs, issues, branches, PRs, and evidence. | All stories after contracts are named |
+
 ## Information Architecture
 The prototype should have four layers.
 
@@ -87,7 +143,7 @@ Workbench sections:
 The workbench should answer: what changed, what the system believes, what supports it, what conflicts with it, and whether a human exception exists.
 
 ### 3. Intelligence Layer
-The graph should be presented as a living intelligence layer rather than a manual approval queue.
+The graph should be presented as a living intelligence layer. Manual review belongs to exceptions.
 
 Intelligence sections:
 
@@ -128,15 +184,14 @@ The prototype should start with six visible sources. These tiles can mix live-me
 2. The source wall shows six real source links with status.
 3. User selects Aguamarga PhenoCam.
 4. Workbench shows the latest permitted source image, source freshness observation, and graph-intelligence state.
-5. User runs `Find updating sources`.
-6. Tiles update with fresh, stale, watch, and research states.
-7. User selects an eligible source and runs `Run inference batch`.
-8. Groq produces structured observations and graph-ready claims.
-9. The graph adds provisional evidence with source provenance.
-10. Exceptions appear only for low confidence, conflicts, identity ambiguity, source-policy risk, or public-claim risk.
+5. The app checks freshness automatically and updates tiles with fresh, recent, stale, watch, and research states.
+6. Changed eligible frames are queued for Groq inference automatically or through a small technical control during local testing.
+7. Groq produces structured observations and graph-ready claims.
+8. The graph adds provisional evidence with source provenance.
+9. Exceptions appear only for low confidence, conflicts, identity ambiguity, source-policy risk, or public-claim risk.
 
 ## Human Decision Model
-Human action is needed only for exceptions. Source changes, model claims, and observer context enter the graph automatically with provenance, confidence, and status. Human review changes claim status or resolves ambiguity; it does not manually approve every graph edge.
+Human action is needed only for exceptions. Source changes, model claims, and observer context enter the graph automatically with provenance, confidence, and status. Human review changes claim status or resolves ambiguity; routine graph evidence accumulates automatically.
 
 Decision states:
 
@@ -180,21 +235,23 @@ The API can start with derived data from existing events and PhenoCam probes. Th
 - The default hero image is a real source image or an honest source placeholder.
 - The fixture replay is visible as a development source only.
 - Source freshness appears on each tile.
+- Freshness appears as measured state: checked time, source age, cadence, and status.
 - The selected source workbench explains source, freshness, model read, observer context, graph evidence, and decision state.
 - Graph growth and exception state are visible without implying manual approval of every event.
 - Groq speed appears as throughput and latency evidence for multi-source processing.
-- Technical details do not dominate the first impression.
+- Technical details stay secondary to source state, graph learning, and exception attention.
 - Buttons have hover, pressed, loading, success, and failed states.
 - Text fits at 1440 px, 1280 px, and mobile widths.
-- The page reads as a designed product surface, not generic boxes.
+- The page reads as a designed product surface with clear hierarchy, real imagery, and purposeful controls.
 
 ## Test Acceptance Criteria
 - Unit tests cover source-wall mapping from seeded state and PhenoCam probe results.
 - E2E tests verify six tiles render.
 - E2E tests verify selecting a source updates the workbench.
-- E2E tests verify `Find updating sources` updates tile freshness.
+- E2E tests verify automatic or background freshness updates tile freshness.
+- E2E tests verify manual refresh is secondary if it exists.
 - E2E tests verify every source tile links to a real source page or official source reference.
-- E2E tests verify fixture replay cannot become the opening hero.
+- E2E tests verify fixture replay stays out of the opening hero.
 - E2E tests verify technical trace is present and secondary.
 - Visual checks capture desktop and mobile screenshots.
 - Evidence records screenshots, test output, and any remaining source limitations.
@@ -202,8 +259,9 @@ The API can start with derived data from existing events and PhenoCam probes. Th
 ## Implementation Boundaries
 This pass should build a clickable prototype with real interaction, real source links, real permitted PhenoCam images, and honest data states. It can use memory state for the source wall while the graph repository remains connected through the existing boundary.
 
-Do not add new external feeds without source-policy review. Do not present static benchmark imagery as live source proof. Do not make the observer-context layer look implemented until a permitted context route is proven.
+New external feeds require source-policy review. Static benchmark imagery must stay labeled as benchmark evidence. The observer-context layer should appear implemented only after a permitted context route is proven.
 
 ## Change Log
+- 2026-06-28: Added UI placement rules, source-backed UX references, and next product stories for parallel agentic work.
 - 2026-06-28: Reframed the prototype around conservation intelligence, autonomous graph-building, exceptions, and actual source links.
 - 2026-06-28: Created source-wall redesign spec for the multi-source Ethogram Graph prototype.
