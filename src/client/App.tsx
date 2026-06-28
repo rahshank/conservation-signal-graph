@@ -1,11 +1,12 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, Clock, Cpu, Database, FileCheck, GitBranch, Image, Link, Play, RadioTower, RotateCw, ShieldCheck } from "lucide-react";
-import type { DashboardState, GraphNode } from "../shared/schema";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Database, Eye, FileCheck, GitBranch, Image, Link, ListChecks, Play, RadioTower, RotateCw, ShieldCheck, XCircle } from "lucide-react";
+import type { DashboardState, GraphNode, GraphRelationship } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
 
 export function App() {
   const [state, setState] = useState<DashboardState>(seededDashboardState());
   const [status, setStatus] = useState("Seeded demo state");
+  const [reviewDecision, setReviewDecision] = useState("Awaiting monitor review");
 
   useEffect(() => {
     void refreshState();
@@ -31,6 +32,7 @@ export function App() {
       return;
     }
     setState((await response.json()) as DashboardState);
+    setReviewDecision("Awaiting monitor review");
     setStatus("Signal ingested");
   }
 
@@ -43,6 +45,7 @@ export function App() {
       return;
     }
     setState((await response.json()) as DashboardState);
+    setReviewDecision("Awaiting monitor review");
     setStatus("NPS source ingested");
   }
 
@@ -61,20 +64,32 @@ export function App() {
   const latestConfidence = Math.round(latest.observation.confidence * 100);
   const isLive = latest.source.sourceType === "live_camera";
 
+  useEffect(() => {
+    setReviewDecision("Awaiting monitor review");
+  }, [latest.observation.observationId]);
+
   return (
     <main className="shell">
       <section className="commandBar" aria-label="Project command bar">
         <div className="identity">
           <div className="mark"><RadioTower size={24} /></div>
           <div>
-            <p className="eyebrow">Protected-area signal intelligence</p>
+            <p className="eyebrow">Protected-area signal review</p>
             <h1>Conservation Signal Graph</h1>
           </div>
         </div>
-        <div className="commandActions">
-          <button onClick={probeNps}><RotateCw size={16} />Probe</button>
-          <button onClick={ingestNps}><RadioTower size={16} />Ingest NPS</button>
-          <button className="primary" onClick={ingestFixture}><Play size={16} />Fixture run</button>
+        <div className="commandCluster">
+          <div className="modeStrip" aria-label="Proof modes">
+            <span>Source: {isLive ? "live camera" : "fixture"}</span>
+            <span>Extraction: {state.metrics.extractionMode}</span>
+            <span>Graph: {state.metrics.graphMode}</span>
+            <span>Validation: {latest.observation.validationStatus}</span>
+          </div>
+          <div className="commandActions">
+            <button onClick={probeNps}><RotateCw size={16} />Probe</button>
+            <button onClick={ingestNps}><RadioTower size={16} />Ingest NPS</button>
+            <button className="primary" onClick={ingestFixture}><Play size={16} />Fixture run</button>
+          </div>
         </div>
       </section>
 
@@ -97,127 +112,206 @@ export function App() {
         <span className={`pill ${state.sourceGate.status}`}>{state.sourceGate.status.replace(/_/g, " ")}</span>
       </section>
 
-      <section className="workspace" aria-label="Monitoring workspace">
-        <div className="panel framePanel heroPanel">
-          <div className="panelHeader">
-            <div>
-              <h2>{latest.source.sourceName}</h2>
-              <p>{latest.source.locationLabel}</p>
-            </div>
-            <span className={isLive ? "sourceBadge live" : "sourceBadge fixture"}>{latest.source.sourceType.replace("_", " ")}</span>
-          </div>
-          <div className="frame">
-            <img src={latest.source.imageUrl ?? "/fixture-frame.svg"} alt={latest.source.sourceName} />
-            <div className="frameOverlay">
-              <span>{new Date(latest.source.capturedAt).toLocaleTimeString()}</span>
-              <strong>{latestConfidence}%</strong>
-            </div>
-          </div>
-          <dl className="sourceFacts">
-            <div><dt>Source</dt><dd>{latest.source.sourceName}</dd></div>
-            <div><dt>Place</dt><dd>{latest.source.locationLabel}</dd></div>
-            <div><dt>Terms</dt><dd>{latest.source.termsStatus.replace("_", " ")}</dd></div>
-            <div>
-              <dt>Review</dt>
-              <dd>{latest.source.sourcePageUrl ? <a href={latest.source.sourcePageUrl}>{displayUrl(latest.source.sourcePageUrl)}</a> : "No review URL"}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className="panel eventPanel">
-          <div className="panelHeader">
-            <div>
-              <h2>Signal Feed</h2>
-              <p>{status}</p>
-            </div>
-            <span>{state.events.length} retained</span>
-          </div>
-          <div className="eventList">
-            {state.events.map((event) => (
-              <article className="event" key={event.observation.observationId}>
-                <div>
-                  <h3>{event.observation.summary}</h3>
-                  <p>{new Date(event.source.capturedAt).toLocaleString()}</p>
-                </div>
-                <span className="confidence">{Math.round(event.observation.confidence * 100)}%</span>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel graphPanel">
-          <div className="panelHeader">
-            <div>
-              <h2>Context Graph</h2>
-              <p>Evidence, uncertainty, actions, and questions</p>
-            </div>
-            <span>{state.graph.nodes.length} nodes / {state.graph.relationships.length} edges</span>
-          </div>
-          <div className="graphCanvas" aria-label="Graph nodes">
-            {state.graph.nodes.slice(0, 14).map((node, index) => (
-              <GraphDot key={node.id} node={node} index={index} />
-            ))}
-          </div>
-        </div>
-
-        <div className="panel runPanel" aria-label="Model run details">
-          <div className="panelHeader">
-            <div>
-              <h2>Run Details</h2>
-              <p>Model, validation, source trace, and submitted frame</p>
-            </div>
-            <FileCheck size={18} />
-          </div>
-          <dl className="detailGrid">
-            <DetailItem icon={<Cpu size={15} />} label="Model" value={latest.observation.model} />
-            <DetailItem icon={<FileCheck size={15} />} label="Prompt" value={latest.observation.promptVersion} />
-            <DetailItem icon={<Clock size={15} />} label="Latency" value={`${latest.observation.latencyMs} ms`} />
-            <DetailItem icon={<ShieldCheck size={15} />} label="Validation" value={latest.observation.validationStatus} />
-            <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
-            <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
-            <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={state.metrics.extractionMode} />
-            <DetailItem
-              icon={<Link size={15} />}
-              label="Source URL"
-              value={latest.source.imageUrl ?? "Fixture asset"}
-              href={latest.source.imageUrl}
-            />
-          </dl>
-
-          <section className="frameProcessing" aria-label="Frame processing metadata">
-            <div className="subhead">
-              <Image size={16} />
-              <h3>Frame Processing</h3>
-            </div>
-            {latest.observation.frameProcessing ? (
-              <dl className="detailGrid compact">
-                <DetailItem label="Original" value={formatDimensions(latest.observation.frameProcessing.originalWidth, latest.observation.frameProcessing.originalHeight)} />
-                <DetailItem label="Original bytes" value={formatBytes(latest.observation.frameProcessing.originalBytes)} />
-                <DetailItem label="Submitted" value={formatDimensions(latest.observation.frameProcessing.submittedWidth, latest.observation.frameProcessing.submittedHeight)} />
-                <DetailItem label="Submitted bytes" value={formatBytes(latest.observation.frameProcessing.submittedBytes)} />
-                <DetailItem label="Resized" value={latest.observation.frameProcessing.resized ? "Yes" : "No"} />
-                <DetailItem label="Reason" value={latest.observation.frameProcessing.reason.replace("_", " ")} />
-              </dl>
-            ) : (
-              <p className="emptyDetail">No frame-normalization record for fixture mode.</p>
-            )}
-          </section>
-        </div>
-
-        <div className="panel queryPanel">
-          <div className="panelHeader">
-            <div>
-              <h2>Review Queue</h2>
-              <p>Predefined graph checks</p>
-            </div>
-            <AlertTriangle size={18} />
-          </div>
-          <QueryResult label="Unresolved risks" nodes={groupedNodes.Risk ?? []} />
-          <QueryResult label="Actions needing review" nodes={groupedNodes.Action ?? []} />
-          <QueryResult label="Open questions" nodes={groupedNodes.Question ?? []} />
-        </div>
+      <section className="workspace reviewWorkspace" aria-label="Monitoring workspace">
+        <SignalUnderReview latest={latest} isLive={isLive} latestConfidence={latestConfidence} />
+        <AIObservation latest={latest} latestConfidence={latestConfidence} />
+        <ReviewDecision decision={reviewDecision} onDecision={setReviewDecision} />
+        <ContextGraph nodes={state.graph.nodes} relationships={state.graph.relationships} />
+        <EvidenceTrace latest={latest} state={state} latestConfidence={latestConfidence} />
+        <SignalQueue events={state.events} status={status} groupedNodes={groupedNodes} />
       </section>
     </main>
+  );
+}
+
+function SignalUnderReview({ latest, isLive, latestConfidence }: {
+  latest: DashboardState["events"][number];
+  isLive: boolean;
+  latestConfidence: number;
+}) {
+  return (
+    <section className="panel signalPanel" aria-label="Signal under review">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Current camera signal</p>
+          <h2>Signal Under Review</h2>
+        </div>
+        <span className={isLive ? "sourceBadge live" : "sourceBadge fixture"}>{latest.source.sourceType.replace("_", " ")}</span>
+      </div>
+      <div className="frame">
+        <img src={latest.source.imageUrl ?? "/fixture-frame.svg"} alt={latest.source.sourceName} />
+        <div className="frameOverlay">
+          <span>{new Date(latest.source.capturedAt).toLocaleTimeString()}</span>
+          <strong>{latestConfidence}%</strong>
+        </div>
+      </div>
+      <dl className="sourceFacts">
+        <div><dt>Source</dt><dd>{latest.source.sourceName}</dd></div>
+        <div><dt>Place</dt><dd>{latest.source.locationLabel}</dd></div>
+        <div><dt>Terms</dt><dd>{latest.source.termsStatus.replace("_", " ")}</dd></div>
+        <div>
+          <dt>Review</dt>
+          <dd>{latest.source.sourcePageUrl ? <a href={latest.source.sourcePageUrl}>{displayUrl(latest.source.sourcePageUrl)}</a> : "No review URL"}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+function AIObservation({ latest, latestConfidence }: { latest: DashboardState["events"][number]; latestConfidence: number }) {
+  return (
+    <section className="panel observationPanel" aria-label="AI observation">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Model read</p>
+          <h2>AI Observation</h2>
+        </div>
+        <span className="confidence">{latestConfidence}%</span>
+      </div>
+      <div className="observationSummary">
+        <h3>{latest.observation.summary}</h3>
+        <p>Observed {new Date(latest.observation.observedAt).toLocaleString()}</p>
+      </div>
+      <div className="evidenceRows">
+        <EvidenceList title="Species candidates" items={latest.observation.speciesCandidates.map((item) => `${item.label} - ${Math.round(item.confidence * 100)}% - ${item.evidence}`)} />
+        <EvidenceList title="Risks" items={latest.observation.risks.map((item) => `${item.label} - ${item.severity} - ${item.evidence}`)} />
+        <EvidenceList title="Actions" items={latest.observation.actions.map((item) => `${item.label} - ${item.ownerHint}`)} />
+        <EvidenceList title="Questions" items={latest.observation.questions} />
+      </div>
+    </section>
+  );
+}
+
+function ReviewDecision({ decision, onDecision }: { decision: string; onDecision: (decision: string) => void }) {
+  return (
+    <section className="panel decisionPanel" aria-label="Review decision">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Monitor action</p>
+          <h2>Review Decision</h2>
+        </div>
+        <span className="decisionState">{decision}</span>
+      </div>
+      <div className="decisionActions">
+        <button onClick={() => onDecision("Accepted as observation")}><CheckCircle2 size={16} />Accept observation</button>
+        <button onClick={() => onDecision("Sent to human review")}><AlertTriangle size={16} />Send to review</button>
+        <button onClick={() => onDecision("Dismissed as low confidence")}><XCircle size={16} />Dismiss low confidence</button>
+        <button onClick={() => onDecision("Watching source")}><Eye size={16} />Watch source</button>
+      </div>
+    </section>
+  );
+}
+
+function ContextGraph({ nodes, relationships }: { nodes: GraphNode[]; relationships: GraphRelationship[] }) {
+  return (
+    <section className="panel graphPanel">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Connected evidence</p>
+          <h2>Context Graph</h2>
+        </div>
+        <span>{nodes.length} nodes / {relationships.length} edges</span>
+      </div>
+      <div className="graphBody">
+        <div className="graphCanvas" aria-label="Graph nodes">
+          {nodes.slice(0, 14).map((node, index) => (
+            <GraphDot key={node.id} node={node} index={index} />
+          ))}
+        </div>
+        <div className="relationshipList" aria-label="Graph relationships">
+          {relationships.slice(0, 8).map((relationship) => (
+            <RelationshipRow key={`${relationship.from}-${relationship.type}-${relationship.to}`} relationship={relationship} nodes={nodes} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EvidenceTrace({ latest, state, latestConfidence }: {
+  latest: DashboardState["events"][number];
+  state: DashboardState;
+  latestConfidence: number;
+}) {
+  return (
+    <section className="panel evidencePanel" aria-label="Evidence trace">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Technical trace</p>
+          <h2>Evidence Trace</h2>
+        </div>
+        <FileCheck size={18} />
+      </div>
+      <dl className="detailGrid">
+        <DetailItem icon={<Cpu size={15} />} label="Model" value={latest.observation.model} />
+        <DetailItem icon={<FileCheck size={15} />} label="Prompt" value={latest.observation.promptVersion} />
+        <DetailItem icon={<Clock size={15} />} label="Latency" value={`${latest.observation.latencyMs} ms`} />
+        <DetailItem icon={<ShieldCheck size={15} />} label="Validation" value={latest.observation.validationStatus} />
+        <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
+        <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
+        <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={state.metrics.extractionMode} />
+        <DetailItem
+          icon={<Link size={15} />}
+          label="Source URL"
+          value={latest.source.imageUrl ?? "Fixture asset"}
+          href={latest.source.imageUrl}
+        />
+      </dl>
+
+      <section className="frameProcessing" aria-label="Frame processing metadata">
+        <div className="subhead">
+          <Image size={16} />
+          <h3>Frame Processing</h3>
+        </div>
+        {latest.observation.frameProcessing ? (
+          <dl className="detailGrid compact">
+            <DetailItem label="Original" value={formatDimensions(latest.observation.frameProcessing.originalWidth, latest.observation.frameProcessing.originalHeight)} />
+            <DetailItem label="Original bytes" value={formatBytes(latest.observation.frameProcessing.originalBytes)} />
+            <DetailItem label="Submitted" value={formatDimensions(latest.observation.frameProcessing.submittedWidth, latest.observation.frameProcessing.submittedHeight)} />
+            <DetailItem label="Submitted bytes" value={formatBytes(latest.observation.frameProcessing.submittedBytes)} />
+            <DetailItem label="Resized" value={latest.observation.frameProcessing.resized ? "Yes" : "No"} />
+            <DetailItem label="Reason" value={latest.observation.frameProcessing.reason.replace("_", " ")} />
+          </dl>
+        ) : (
+          <p className="emptyDetail">No frame-normalization record for fixture mode.</p>
+        )}
+      </section>
+    </section>
+  );
+}
+
+function SignalQueue({ events, status, groupedNodes }: {
+  events: DashboardState["events"];
+  status: string;
+  groupedNodes: Partial<Record<GraphNode["kind"], GraphNode[]>>;
+}) {
+  return (
+    <section className="panel queuePanel">
+      <div className="sectionHeader">
+        <div>
+          <p className="eyebrow">Review queue</p>
+          <h2>Signal Queue</h2>
+        </div>
+        <span>{events.length} retained</span>
+      </div>
+      <p className="queueStatus">{status}</p>
+      <div className="eventList">
+        {events.map((event) => (
+          <article className="event" key={event.observation.observationId}>
+            <div>
+              <h3>{event.observation.summary}</h3>
+              <p>{event.source.sourceName} - {new Date(event.source.capturedAt).toLocaleString()}</p>
+            </div>
+            <span className="confidence">{Math.round(event.observation.confidence * 100)}%</span>
+          </article>
+        ))}
+      </div>
+      <div className="queueChecks">
+        <QueryResult label="Unresolved risks" nodes={groupedNodes.Risk ?? []} />
+        <QueryResult label="Actions needing review" nodes={groupedNodes.Action ?? []} />
+        <QueryResult label="Open questions" nodes={groupedNodes.Question ?? []} />
+      </div>
+    </section>
   );
 }
 
@@ -236,6 +330,26 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
       <span>{icon}{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function EvidenceList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <section className="evidenceList">
+      <div className="evidenceListTitle">
+        <ListChecks size={15} />
+        <h3>{title}</h3>
+      </div>
+      {items.length === 0 ? (
+        <p>No signal yet.</p>
+      ) : (
+        <ul>
+          {items.slice(0, 4).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -273,6 +387,17 @@ function QueryResult({ label, nodes }: { label: string; nodes: GraphNode[] }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function RelationshipRow({ relationship, nodes }: { relationship: GraphRelationship; nodes: GraphNode[] }) {
+  const from = nodes.find((node) => node.id === relationship.from)?.label ?? relationship.from;
+  const to = nodes.find((node) => node.id === relationship.to)?.label ?? relationship.to;
+  return (
+    <div className="relationshipRow">
+      <span>{relationship.type.replace(/_/g, " ")}</span>
+      <p>{from} -&gt; {to}</p>
     </div>
   );
 }

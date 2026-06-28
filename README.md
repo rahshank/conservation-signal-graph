@@ -26,6 +26,9 @@ Security policy: [Security Policy](SECURITY.md)
 Linear project: [Conservation Signal Graph](https://linear.app/rahshank/project/conservation-signal-graph-2f78e7f44301)
 Pipeline explainer: [Pipeline Explainer](docs/context/Pipeline_Explainer.md)
 Source candidates: [Source Candidate Register](docs/context/Source_Candidate_Register.md)
+Personas and UI story: [Personas](docs/context/Personas.md)
+Product reference research: [Product Reference Research](docs/context/Product_Reference_Research.md)
+Persona-led UI design: [Persona-led UI Design](docs/superpowers/specs/2026-06-27-persona-led-ui-design.md)
 Glossary: [Glossary](docs/context/Glossary.md)
 
 ## Run locally
@@ -84,6 +87,7 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-27: Added persona-led UI story and product reference research links.
 - 2026-06-27: Added Linear as the operating backlog link.
 - 2026-06-27: Added context-layer links and clarified that Bartlett Cove is the next wildlife-likelihood proof source.
 - 2026-06-27: Updated project status after the NPS Yosemite Falls source gate passed and added the security policy link.

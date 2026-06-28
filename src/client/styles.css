@@ -1,6 +1,6 @@
 :root {
   color: #17211c;
-  background: #e9ebe6;
+  background: #e8e9e3;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,16 +17,17 @@ body {
 
 button {
   align-items: center;
-  border: 1px solid #bcc4ba;
+  border: 1px solid #bac2b8;
   border-radius: 8px;
-  background: #f7f8f4;
+  background: #f8f9f4;
   color: #17211c;
   cursor: pointer;
   display: inline-flex;
   font: inherit;
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 760;
   gap: 8px;
+  justify-content: center;
   min-height: 42px;
   padding: 0 14px;
 }
@@ -37,9 +38,19 @@ button:hover {
 }
 
 button.primary {
-  border-color: #1d5f3e;
-  background: #1d5f3e;
+  border-color: #1f5d40;
+  background: #1f5d40;
   color: #ffffff;
+}
+
+a {
+  color: #245f87;
+  font-weight: 720;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 .shell {
@@ -53,9 +64,9 @@ button.primary {
 .gate,
 .panel,
 .metric {
-  border: 1px solid #cdd3ca;
+  border: 1px solid #cbd2c8;
   border-radius: 8px;
-  background: rgba(250, 251, 247, 0.94);
+  background: rgba(250, 251, 247, 0.96);
   box-shadow: 0 1px 2px rgba(33, 39, 34, 0.05);
 }
 
@@ -64,7 +75,7 @@ button.primary {
   display: flex;
   gap: 18px;
   justify-content: space-between;
-  min-height: 88px;
+  min-height: 92px;
   padding: 18px 20px;
 }
 
@@ -79,7 +90,7 @@ button.primary {
   align-items: center;
   background: #17211c;
   border-radius: 8px;
-  color: #d8ef78;
+  color: #d7ec6f;
   display: flex;
   flex: 0 0 auto;
   height: 52px;
@@ -88,11 +99,11 @@ button.primary {
 }
 
 .eyebrow {
-  color: #607063;
+  color: #647067;
   font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0;
-  margin: 0 0 3px;
+  margin: 0 0 4px;
   text-transform: uppercase;
 }
 
@@ -104,19 +115,52 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.9rem, 3.8vw, 3.8rem);
+  font-size: 2.35rem;
   letter-spacing: 0;
-  line-height: 0.96;
+  line-height: 1;
 }
 
 h2 {
   font-size: 1rem;
-  line-height: 1.1;
+  line-height: 1.12;
 }
 
 h3 {
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   line-height: 1.28;
+}
+
+.commandCluster {
+  align-items: flex-end;
+  display: grid;
+  gap: 10px;
+}
+
+.modeStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
+}
+
+.modeStrip span,
+.pill,
+.sourceBadge,
+.decisionState,
+.sectionHeader > span:not(.confidence) {
+  border: 1px solid #d3d9d0;
+  border-radius: 999px;
+  color: #3f4d43;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1;
+  padding: 7px 9px;
+}
+
+.modeStrip span {
+  background: #eef1ea;
 }
 
 .commandActions {
@@ -134,9 +178,9 @@ h3 {
 
 .metric {
   display: grid;
-  gap: 8px;
-  min-height: 78px;
-  padding: 13px 14px;
+  gap: 7px;
+  min-height: 72px;
+  padding: 12px 14px;
 }
 
 .metric span {
@@ -149,7 +193,7 @@ h3 {
 }
 
 .metric strong {
-  font-size: 1.42rem;
+  font-size: 1.24rem;
   letter-spacing: 0;
   line-height: 1;
 }
@@ -170,17 +214,22 @@ h3 {
 }
 
 .gateCopy svg {
-  color: #1d5f3e;
+  color: #1f5d40;
   flex: 0 0 auto;
   margin-top: 1px;
 }
 
 .gate p,
-.panelHeader p,
+.sectionHeader p,
 .event p,
 .queryResult p,
 .queryResult li,
-.sourceFacts dt {
+.sourceFacts dt,
+.observationSummary p,
+.evidenceList li,
+.evidenceList p,
+.queueStatus,
+.relationshipRow p {
   color: #657166;
   font-size: 0.82rem;
   line-height: 1.35;
@@ -190,20 +239,10 @@ h3 {
   margin-top: 3px;
 }
 
-.pill,
-.sourceBadge {
-  border-radius: 999px;
-  display: inline-flex;
-  flex: 0 0 auto;
-  font-size: 0.74rem;
-  font-weight: 850;
-  padding: 7px 9px;
-}
-
 .blocked_missing_key,
 .fixture_only,
 .sourceBadge.fixture {
-  background: #f0d9a8;
+  background: #f3dcb1;
   color: #5e3a0d;
 }
 
@@ -213,18 +252,50 @@ h3 {
   color: #214d2e;
 }
 
-.workspace {
+.reviewWorkspace {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(340px, 0.92fr) minmax(0, 1.05fr) minmax(360px, 1fr);
+  grid-template-areas:
+    "signal observation decision"
+    "graph graph evidence"
+    "queue queue queue";
+  grid-template-columns: minmax(360px, 1.15fr) minmax(340px, 1fr) minmax(340px, 0.95fr);
 }
 
 .panel {
-  min-height: 250px;
+  min-height: 0;
   overflow: hidden;
 }
 
-.panelHeader {
+.signalPanel {
+  align-self: start;
+  grid-area: signal;
+}
+
+.observationPanel {
+  align-self: start;
+  grid-area: observation;
+}
+
+.decisionPanel {
+  align-self: start;
+  grid-area: decision;
+}
+
+.evidencePanel {
+  align-self: start;
+  grid-area: evidence;
+}
+
+.graphPanel {
+  grid-area: graph;
+}
+
+.queuePanel {
+  grid-area: queue;
+}
+
+.sectionHeader {
   align-items: center;
   border-bottom: 1px solid #dfe4dd;
   display: flex;
@@ -234,16 +305,11 @@ h3 {
   padding: 13px 16px;
 }
 
-.heroPanel,
-.queryPanel {
-  display: grid;
-}
-
 .frame {
   align-items: center;
   background: #111712;
   display: flex;
-  min-height: 330px;
+  min-height: 412px;
   overflow: hidden;
   position: relative;
 }
@@ -251,15 +317,15 @@ h3 {
 .frame img {
   display: block;
   height: 100%;
-  max-height: 430px;
+  max-height: 520px;
   object-fit: cover;
   width: 100%;
 }
 
 .frameOverlay {
   align-items: center;
-  background: rgba(17, 23, 18, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(17, 23, 18, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   bottom: 12px;
   color: #ffffff;
@@ -279,7 +345,7 @@ h3 {
 }
 
 .frameOverlay strong {
-  color: #d8ef78;
+  color: #d7ec6f;
 }
 
 .sourceFacts {
@@ -301,38 +367,66 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-a {
-  color: #1d5f3e;
-  font-weight: 700;
-  text-decoration: none;
+.observationSummary {
+  border-bottom: 1px solid #dfe4dd;
+  display: grid;
+  gap: 6px;
+  padding: 15px 16px;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-.eventList {
+.evidenceRows {
   display: grid;
   gap: 10px;
   padding: 14px;
 }
 
-.event {
-  align-items: flex-start;
+.evidenceList {
   background: #ffffff;
   border: 1px solid #dfe4dd;
   border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+}
+
+.evidenceListTitle {
+  align-items: center;
   display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  padding: 13px;
+  gap: 7px;
+}
+
+.evidenceListTitle svg {
+  color: #245f87;
+}
+
+.evidenceList ul,
+.queryResult ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.decisionState {
+  background: #eef1ea;
+}
+
+.decisionActions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 14px;
+}
+
+.decisionActions button {
+  min-height: 48px;
 }
 
 .confidence {
   align-items: center;
   background: #17211c;
   border-radius: 999px;
-  color: #d8ef78;
+  color: #d7ec6f;
   display: inline-flex;
   flex: 0 0 auto;
   font-size: 0.8rem;
@@ -340,92 +434,6 @@ a:hover {
   height: 38px;
   justify-content: center;
   width: 52px;
-}
-
-.graphPanel {
-  grid-row: span 2;
-}
-
-.graphCanvas {
-  background:
-    linear-gradient(90deg, rgba(70, 83, 72, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(70, 83, 72, 0.12) 1px, transparent 1px),
-    #f4f6f0;
-  background-size: 34px 34px;
-  height: 644px;
-  position: relative;
-}
-
-.graphCanvas::before,
-.graphCanvas::after {
-  background: #a9b48b;
-  content: "";
-  height: 2px;
-  left: 14%;
-  opacity: 0.55;
-  position: absolute;
-  top: 50%;
-  transform: rotate(23deg);
-  width: 72%;
-}
-
-.graphCanvas::after {
-  background: #8aa3b8;
-  transform: rotate(-18deg);
-}
-
-.graphDot {
-  align-items: center;
-  border: 2px solid #f9fbf4;
-  border-radius: 50%;
-  box-shadow: 0 10px 24px rgba(23, 33, 28, 0.16);
-  color: #ffffff;
-  display: flex;
-  justify-content: center;
-  padding: 8px;
-  position: absolute;
-  text-align: center;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-}
-
-.graphDot span {
-  font-size: 0.6rem;
-  font-weight: 850;
-  line-height: 1;
-}
-
-.Source,
-.Frame,
-.Observation {
-  background: #1d5f3e;
-}
-
-.SpeciesCandidate {
-  background: #8d5a2d;
-}
-
-.Risk {
-  background: #a33c30;
-}
-
-.Action {
-  background: #365d9a;
-}
-
-.Question,
-.Run,
-.Place {
-  background: #4d5650;
-}
-
-.queryPanel {
-  gap: 0;
-}
-
-.runPanel {
-  display: grid;
-  gap: 0;
 }
 
 .detailGrid {
@@ -485,7 +493,7 @@ a:hover {
 }
 
 .subhead svg {
-  color: #1d5f3e;
+  color: #1f5d40;
 }
 
 .emptyDetail {
@@ -499,6 +507,134 @@ a:hover {
   padding: 12px;
 }
 
+.graphBody {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(320px, 1fr);
+}
+
+.graphCanvas {
+  background:
+    linear-gradient(90deg, rgba(70, 83, 72, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(70, 83, 72, 0.1) 1px, transparent 1px),
+    #f4f6f0;
+  background-size: 34px 34px;
+  height: 382px;
+  position: relative;
+}
+
+.graphCanvas::before,
+.graphCanvas::after {
+  background: #a9b48b;
+  content: "";
+  height: 2px;
+  left: 14%;
+  opacity: 0.55;
+  position: absolute;
+  top: 50%;
+  transform: rotate(23deg);
+  width: 72%;
+}
+
+.graphCanvas::after {
+  background: #8aa3b8;
+  transform: rotate(-18deg);
+}
+
+.graphDot {
+  align-items: center;
+  border: 2px solid #f9fbf4;
+  border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(23, 33, 28, 0.16);
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  position: absolute;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.graphDot span {
+  font-size: 0.6rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.Source,
+.Frame,
+.Observation {
+  background: #1f5d40;
+}
+
+.SpeciesCandidate {
+  background: #8d5a2d;
+}
+
+.Risk {
+  background: #a33c30;
+}
+
+.Action {
+  background: #365d9a;
+}
+
+.Question,
+.Run,
+.Place {
+  background: #4d5650;
+}
+
+.relationshipList {
+  border-left: 1px solid #dfe4dd;
+  display: grid;
+  gap: 8px;
+  max-height: 382px;
+  overflow: auto;
+  padding: 14px;
+}
+
+.relationshipRow {
+  background: #ffffff;
+  border: 1px solid #dfe4dd;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.relationshipRow span {
+  color: #245f87;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.queueStatus {
+  border-bottom: 1px solid #dfe4dd;
+  padding: 12px 16px;
+}
+
+.eventList {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.event {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #dfe4dd;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 13px;
+}
+
+.queueChecks {
+  border-top: 1px solid #dfe4dd;
+}
+
 .queryResult {
   border-bottom: 1px solid #dfe4dd;
   display: grid;
@@ -510,21 +646,33 @@ a:hover {
   font-size: 0.93rem;
 }
 
-.queryResult ul {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding-left: 18px;
-}
-
-@media (max-width: 1120px) {
-  .workspace {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 1180px) {
+  .commandBar {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .graphPanel {
-    grid-column: span 2;
-    grid-row: auto;
+  .commandCluster {
+    align-items: stretch;
+  }
+
+  .modeStrip,
+  .commandActions {
+    justify-content: flex-start;
+  }
+
+  .statusRail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reviewWorkspace {
+    grid-template-areas:
+      "signal observation"
+      "decision decision"
+      "graph graph"
+      "evidence evidence"
+      "queue queue";
+    grid-template-columns: minmax(340px, 1fr) minmax(340px, 1fr);
   }
 }
 
@@ -533,7 +681,10 @@ a:hover {
     padding: 10px;
   }
 
-  .commandBar,
+  h1 {
+    font-size: 1.72rem;
+  }
+
   .gate {
     align-items: stretch;
     flex-direction: column;
@@ -545,7 +696,7 @@ a:hover {
 
   .commandActions,
   .statusRail,
-  .workspace {
+  .reviewWorkspace {
     grid-template-columns: 1fr;
   }
 
@@ -553,23 +704,37 @@ a:hover {
     display: grid;
   }
 
+  .reviewWorkspace {
+    grid-template-areas:
+      "signal"
+      "observation"
+      "decision"
+      "graph"
+      "evidence"
+      "queue";
+  }
+
   .metric {
     min-height: 68px;
-  }
-
-  .graphPanel {
-    grid-column: auto;
-  }
-
-  .graphCanvas {
-    height: 520px;
   }
 
   .frame {
     min-height: 280px;
   }
 
-  .detailGrid {
+  .decisionActions,
+  .detailGrid,
+  .graphBody {
     grid-template-columns: 1fr;
+  }
+
+  .relationshipList {
+    border-left: 0;
+    border-top: 1px solid #dfe4dd;
+    max-height: none;
+  }
+
+  .graphCanvas {
+    height: 360px;
   }
 }

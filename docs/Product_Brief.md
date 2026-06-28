@@ -15,6 +15,16 @@ Neo4j matters because the artifact needs traversable context, not only a list of
 - Which species candidates have repeated signals near the same camera?
 - Which actions depend on low-confidence observations?
 
+## Product Story
+
+Primary user: protected-area monitor.
+
+Primary moment: a camera signal arrives and needs review.
+
+Primary question: Is this signal credible, what supports it, what should happen next, and what remains uncertain?
+
+The product should behave like a signal review console. Pipeline telemetry, graph state, and model metadata remain visible, but they support the review decision rather than becoming the main UI story.
+
 ## MVP
 The first usable version has:
 
@@ -22,7 +32,7 @@ The first usable version has:
 - one fixture replay adapter for development and regression tests
 - Groq extraction boundary with fixture fallback
 - Neo4j graph repository boundary with memory fallback
-- dashboard with events, current frame, graph, queries, and metrics
+- signal review console with current frame, observation, review decision, graph context, and evidence trace
 - public evidence bundle with tests, screenshots, source notes, and latency notes
 
 ## Public claim
@@ -31,4 +41,5 @@ This is a prototype and capability test. It is not a production conservation sys
 The claim is strongest only after the live-source gate passes. Until then, the project shows the architecture, workflow, and test harness, with the source constraint clearly visible.
 
 ## Change log
+- 2026-06-27: Added the persona-led product story and review-console direction.
 - 2026-06-27: Created first product brief.
