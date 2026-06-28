@@ -8,7 +8,8 @@ import {
 describe("PhenoCam cadence adapter", () => {
   it("turns current PhenoCam metadata, headers, and daily counts into cadence evidence", async () => {
     const result = await probePhenoCamSite("aguamarga", {
-      fetchImpl: createPhenoCamFetch()
+      fetchImpl: createPhenoCamFetch(),
+      checkedAt: "2026-06-28T05:31:23.000Z"
     });
 
     expect(result.ok).toBe(true);
@@ -19,9 +20,21 @@ describe("PhenoCam cadence adapter", () => {
     expect(result.evidence.sourceType).toBe("periodic_snapshot");
     expect(result.evidence.status).toBe("cadence_candidate");
     expect(result.evidence.latestImageUrl).toBe("https://phenocam.nau.edu/data/latest/aguamarga.jpg");
-    expect(result.evidence.latestModified).toBe("Sat, 27 Jun 2026 19:49:02 GMT");
+    expect(result.evidence.latestModified).toBe("Sun, 28 Jun 2026 05:25:02 GMT");
     expect(result.evidence.etag).toBe("\"6a40292e-535c4\"");
     expect(result.evidence.byteSize).toBe(341444);
+    expect(result.evidence.freshnessObservation).toEqual({
+      checkedAt: "2026-06-28T05:31:23.000Z",
+      sourceReportedAt: "2026-06-28T05:25:02.000Z",
+      ageMs: 381000,
+      ageLabel: "6 min old",
+      status: "fresh",
+      basis: "last_modified",
+      expectedCadenceSeconds: 2274,
+      expectedFramesPerDay: 38,
+      includeForInference: true,
+      summary: "Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day"
+    });
     expect(result.evidence.dailyCounts[0]).toEqual({
       localDate: "2026-06-26",
       rgbCount: 38,
@@ -32,7 +45,8 @@ describe("PhenoCam cadence adapter", () => {
 
   it("marks stale PhenoCam sites without pretending they are cadence candidates", async () => {
     const result = await probePhenoCamSite("acadia", {
-      fetchImpl: createPhenoCamFetch({ stale: true })
+      fetchImpl: createPhenoCamFetch({ stale: true }),
+      checkedAt: "2026-06-28T05:31:23.000Z"
     });
 
     expect(result.ok).toBe(true);
@@ -40,17 +54,23 @@ describe("PhenoCam cadence adapter", () => {
 
     expect(result.evidence.sourceId).toBe("phenocam:acadia");
     expect(result.evidence.status).toBe("stale_snapshot");
+    expect(result.evidence.freshnessObservation.status).toBe("stale");
+    expect(result.evidence.freshnessObservation.includeForInference).toBe(false);
     expect(result.evidence.recommendedAction).toContain("Do not run Groq");
   });
 
   it("probes several feeds and preserves each source as its own graph-ready source event", async () => {
-    const result = await probePhenoCamSites(["aguamarga", "barrocolorado"], {
-      fetchImpl: createPhenoCamFetch()
+    const result = await probePhenoCamSites(["aguamarga", "acadia"], {
+      fetchImpl: createPhenoCamFetch(),
+      checkedAt: "2026-06-28T05:31:23.000Z"
     });
 
     expect(result.results).toHaveLength(2);
     expect(result.summary.totalSources).toBe(2);
-    expect(result.summary.cadenceCandidates).toBe(2);
+    expect(result.summary.cadenceCandidates).toBe(1);
+    expect(result.summary.inferenceEligible).toBe(1);
+    expect(result.summary.fresh).toBe(1);
+    expect(result.summary.staleFreshness).toBe(1);
 
     const first = result.results[0];
     expect(first.ok).toBe(true);
@@ -60,6 +80,7 @@ describe("PhenoCam cadence adapter", () => {
     expect(sourceEvent.sourceType).toBe("periodic_snapshot");
     expect(sourceEvent.sourceId).toBe("phenocam:aguamarga");
     expect(sourceEvent.imageUrl).toBe("https://phenocam.nau.edu/data/latest/aguamarga.jpg");
+    expect(sourceEvent.freshnessObservation?.summary).toContain("Fresh:");
     expect(sourceEvent.termsStatus).toBe("permitted");
     expect(sourceEvent.notes).toContain("38 RGB frames");
   });
@@ -108,7 +129,7 @@ function createPhenoCamFetch(options: { stale?: boolean } = {}): typeof fetch {
       return new Response(null, {
         status: 200,
         headers: {
-          "Last-Modified": stale ? "Fri, 07 Jan 2022 11:00:02 GMT" : "Sat, 27 Jun 2026 19:49:02 GMT",
+          "Last-Modified": stale ? "Fri, 07 Jan 2022 11:00:02 GMT" : "Sun, 28 Jun 2026 05:25:02 GMT",
           ETag: stale ? "\"61d81d32-2bd06\"" : "\"6a40292e-535c4\"",
           "Content-Length": stale ? "179462" : "341444"
         }

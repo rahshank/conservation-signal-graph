@@ -26,7 +26,20 @@ source registry
 Carries source identity, source type, capture time, image URL or blob reference, place label, terms reference, source status, source freshness, update cadence evidence, content hash, and source mode.
 
 ### `SourceCadenceEvidence`
-Carries source identity, source type, probe time, latest image URL, page URL, place label, terms status, API freshness, image headers, daily frame counts, cadence summary, and recommended action.
+Carries source identity, source type, probe time, latest image URL, page URL, place label, terms status, API freshness, image headers, source freshness observation, daily frame counts, cadence summary, and recommended action.
+
+### `SourceFreshnessObservation`
+Carries the freshness read for an included feed:
+
+- `checkedAt`: when the system inspected the source
+- `sourceReportedAt`: freshest timestamp exposed by the source
+- `ageMs` and `ageLabel`: source age at check time
+- `status`: `fresh`, `recent`, `stale`, or `unknown`
+- `basis`: `last_modified`, `api_date_last`, `etag_only`, `daily_counts`, or `none`
+- `expectedCadenceSeconds`
+- `expectedFramesPerDay`
+- `includeForInference`
+- `summary`, such as `Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day`
 
 ### `ExtractedObservation`
 Carries species candidates, risks, actions, questions, summary, confidence, model, prompt version, latency, and validation status.
@@ -100,6 +113,10 @@ A source adapter must classify the source before ingestion:
 
 The adapter records freshness from headers, API metadata, filename timestamps, daily counts, and content-hash changes. A source is not called live from an image URL alone.
 
+Freshness is an observation, not a vague label. A feed should be included for Groq only when access is allowed, a frame is fetchable, and the freshness observation is `fresh` or `recent`.
+
+The source probe summary reports both broad `cadenceCandidates` and stricter `inferenceEligible` counts. Product copy should use `inferenceEligible` when describing feeds that can be analyzed now.
+
 ## Multi-source boundary
 Groq speed becomes meaningful when the system is running across multiple sources or multiple inference steps per source:
 
@@ -140,6 +157,7 @@ Memory mode exists for local development and static UI checks.
 Use Superpowers for implementation discipline where it fits the task: systematic debugging when behavior is wrong, test-driven development for code changes, writing plans for multi-step implementation, and verification before completion. The project still keeps the durable record in specs, issue templates, PR templates, tests, evidence notes, and acceptance checks.
 
 ## Change log
+- 2026-06-28: Added `SourceFreshnessObservation` as the inclusion measure for source feeds.
 - 2026-06-28: Added the Ethogram Graph naming, PhenoCam cadence interface, multi-source boundary, and planned commentary graph layer.
 - 2026-06-28: Added source cadence as a first-class boundary and clarified when Groq speed is a valid product metric.
 - 2026-06-27: Created first technical spec.

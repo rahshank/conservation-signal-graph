@@ -114,8 +114,8 @@ test("source cadence probe shows updating source candidates before frame analysi
   const cadenceState = seededDashboardState();
   cadenceState.sourceGate = {
     status: "ready_for_probe",
-    label: "Source cadence candidates found",
-    detail: "1 of 1 PhenoCam sources returned current cadence evidence. 0 stale, 0 failed."
+    label: "Fresh source candidates found",
+    detail: "1 of 1 PhenoCam sources are eligible for inference now. 1 fresh, 0 recent, 0 stale freshness, 0 unknown, 0 failed."
   };
 
   await page.route("**/api/state", async (route) => {
@@ -142,6 +142,18 @@ test("source cadence probe shows updating source candidates before frame analysi
               latestModified: "Sat, 27 Jun 2026 19:49:02 GMT",
               etag: "\"6a40292e-535c4\"",
               byteSize: 341444,
+              freshnessObservation: {
+                checkedAt: "2026-06-28T05:31:23.000Z",
+                sourceReportedAt: "2026-06-28T05:25:02.000Z",
+                ageMs: 381000,
+                ageLabel: "6 min old",
+                status: "fresh",
+                basis: "last_modified",
+                expectedCadenceSeconds: 2274,
+                expectedFramesPerDay: 38,
+                includeForInference: true,
+                summary: "Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day"
+              },
               dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
               cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
               recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
@@ -151,6 +163,11 @@ test("source cadence probe shows updating source candidates before frame analysi
         summary: {
           totalSources: 1,
           cadenceCandidates: 1,
+          inferenceEligible: 1,
+          fresh: 1,
+          recent: 0,
+          staleFreshness: 0,
+          unknownFreshness: 0,
           staleSnapshots: 0,
           failed: 0
         }
@@ -161,10 +178,11 @@ test("source cadence probe shows updating source candidates before frame analysi
   await page.goto("/");
   await page.getByRole("button", { name: "Find updating sources" }).click();
 
-  await expect(page.getByLabel("Source gate").getByText("Source cadence candidates found", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Source gate").getByText("Fresh source candidates found", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Updating Source Candidates" })).toBeVisible();
   await expect(page.getByLabel("Source cadence candidates").getByText("aguamarga", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Source cadence candidates").getByText("38 RGB frames")).toBeVisible();
+  await expect(page.getByLabel("Source cadence candidates").getByText("Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day")).toBeVisible();
+  await expect(page.getByLabel("Source cadence candidates").getByText("aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.")).toBeVisible();
 });
 
 test("analyze NPS benchmark promotes the Groq known-context image into review", async ({ page }) => {

@@ -2,7 +2,8 @@ import {
   sourceCadenceEvidenceSchema,
   sourceEventSchema,
   type SourceCadenceEvidence,
-  type SourceEvent
+  type SourceEvent,
+  type SourceFreshnessObservation
 } from "../../shared/schema";
 
 type PhenoCamCamera = {
@@ -74,6 +75,11 @@ export async function probePhenoCamSite(
     const byteSizeHeader = imageHeaders.headers.get("Content-Length");
     const byteSize = byteSizeHeader ? Number.parseInt(byteSizeHeader, 10) : undefined;
     const firstCount = dailyCounts[0];
+    const freshnessObservation = buildFreshnessObservation({
+      checkedAt,
+      latestModified,
+      rgbCount: firstCount?.rgbCount
+    });
     const isCurrent = Boolean(camera.active) && Boolean(camera.date_last && camera.date_last >= staleBefore);
     const status = isCurrent ? "cadence_candidate" : "stale_snapshot";
     const sourceName = camera.Sitename ?? normalizedSite;
@@ -99,9 +105,13 @@ export async function probePhenoCamSite(
         latestModified,
         etag,
         byteSize: Number.isFinite(byteSize) ? byteSize : undefined,
+        freshnessObservation: {
+          ...freshnessObservation,
+          includeForInference: isCurrent && freshnessObservation.includeForInference
+        },
         dailyCounts,
         cadenceSummary,
-        recommendedAction: status === "cadence_candidate"
+        recommendedAction: status === "cadence_candidate" && freshnessObservation.includeForInference
           ? "Eligible for timed polling and changed-frame Groq extraction."
           : "Do not run Groq for speed claims until the source returns current cadence evidence."
       })
@@ -122,12 +132,35 @@ export async function probePhenoCamSites(
 ) {
   const results = await Promise.all(sites.map((site) => probePhenoCamSite(site, options)));
   const cadenceCandidates = results.filter((result) => result.ok && result.evidence.status === "cadence_candidate").length;
+  const okResults = results.filter((result) => result.ok);
+  const freshnessCounts = okResults.reduce(
+    (counts, result) => {
+      const status = result.evidence.freshnessObservation.status;
+      if (status === "stale") counts.staleFreshness += 1;
+      else if (status === "unknown") counts.unknownFreshness += 1;
+      else counts[status] += 1;
+      if (result.evidence.freshnessObservation.includeForInference) counts.inferenceEligible += 1;
+      return counts;
+    },
+    {
+      fresh: 0,
+      recent: 0,
+      staleFreshness: 0,
+      unknownFreshness: 0,
+      inferenceEligible: 0
+    }
+  );
 
   return {
     results,
     summary: {
       totalSources: results.length,
       cadenceCandidates,
+      inferenceEligible: freshnessCounts.inferenceEligible,
+      fresh: freshnessCounts.fresh,
+      recent: freshnessCounts.recent,
+      staleFreshness: freshnessCounts.staleFreshness,
+      unknownFreshness: freshnessCounts.unknownFreshness,
       staleSnapshots: results.filter((result) => result.ok && result.evidence.status === "stale_snapshot").length,
       failed: results.filter((result) => !result.ok).length
     }
@@ -145,6 +178,71 @@ export function buildPhenoCamSourceEvent(evidence: SourceCadenceEvidence, captur
     sourcePageUrl: evidence.sourcePageUrl,
     licenseOrTermsRef: evidence.licenseOrTermsRef,
     termsStatus: evidence.termsStatus,
-    notes: `${evidence.cadenceSummary} ${evidence.recommendedAction}`
+    freshnessObservation: evidence.freshnessObservation,
+    notes: `${evidence.freshnessObservation.summary}. ${evidence.cadenceSummary} ${evidence.recommendedAction}`
   });
+}
+
+function buildFreshnessObservation(input: {
+  checkedAt: string;
+  latestModified?: string;
+  rgbCount?: number;
+}): SourceFreshnessObservation {
+  const checkedDate = new Date(input.checkedAt);
+  const sourceDate = input.latestModified ? new Date(input.latestModified) : undefined;
+  const sourceReportedAt = sourceDate && Number.isFinite(sourceDate.getTime()) ? sourceDate.toISOString() : undefined;
+  const ageMs = sourceDate && Number.isFinite(sourceDate.getTime())
+    ? Math.max(0, checkedDate.getTime() - sourceDate.getTime())
+    : undefined;
+  const expectedFramesPerDay = input.rgbCount && input.rgbCount > 0 ? input.rgbCount : undefined;
+  const expectedCadenceSeconds = expectedFramesPerDay ? Math.round(86_400 / expectedFramesPerDay) : undefined;
+  const status = classifyFreshness(ageMs, expectedCadenceSeconds);
+  const includeForInference = status === "fresh" || status === "recent";
+  const basis = sourceReportedAt ? "last_modified" : expectedFramesPerDay ? "daily_counts" : "none";
+  const ageLabel = ageMs === undefined ? "unknown age" : formatAge(ageMs);
+  const expectedLabel = expectedFramesPerDay
+    ? `expected ~${expectedFramesPerDay} RGB frames/day`
+    : "expected cadence unknown";
+
+  return {
+    checkedAt: checkedDate.toISOString(),
+    sourceReportedAt,
+    ageMs,
+    ageLabel,
+    status,
+    basis,
+    expectedCadenceSeconds,
+    expectedFramesPerDay,
+    includeForInference,
+    summary: `${capitalize(status)}: checked ${formatDisplayTime(checkedDate)}, source image ${ageLabel}, ${expectedLabel}`
+  };
+}
+
+function classifyFreshness(ageMs: number | undefined, expectedCadenceSeconds: number | undefined): SourceFreshnessObservation["status"] {
+  if (ageMs === undefined || expectedCadenceSeconds === undefined) return "unknown";
+  const expectedCadenceMs = expectedCadenceSeconds * 1000;
+  if (ageMs <= expectedCadenceMs * 2) return "fresh";
+  if (ageMs <= expectedCadenceMs * 6) return "recent";
+  return "stale";
+}
+
+function formatAge(ageMs: number): string {
+  const minutes = Math.round(ageMs / 60_000);
+  if (minutes < 60) return `${minutes} min old`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} hr old`;
+  const days = Math.round(hours / 24);
+  return `${days} days old`;
+}
+
+function formatDisplayTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: process.env.CSG_DISPLAY_TIME_ZONE ?? "America/Detroit",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function capitalize(value: string): string {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }

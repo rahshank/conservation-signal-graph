@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export const sourceFreshnessObservationSchema = z.object({
+  checkedAt: z.string().datetime(),
+  sourceReportedAt: z.string().datetime().optional(),
+  ageMs: z.number().int().nonnegative().optional(),
+  ageLabel: z.string().min(1),
+  status: z.enum(["fresh", "recent", "stale", "unknown"]),
+  basis: z.enum(["last_modified", "api_date_last", "etag_only", "daily_counts", "none"]),
+  expectedCadenceSeconds: z.number().int().positive().optional(),
+  expectedFramesPerDay: z.number().int().positive().optional(),
+  includeForInference: z.boolean(),
+  summary: z.string().min(1)
+});
+
 export const sourceEventSchema = z.object({
   sourceId: z.string().min(1),
   sourceName: z.string().min(1),
@@ -11,6 +24,7 @@ export const sourceEventSchema = z.object({
   sourcePageUrl: z.string().url().optional(),
   licenseOrTermsRef: z.string().min(1),
   termsStatus: z.enum(["permitted", "requires_key", "requires_permission", "fixture_only"]),
+  freshnessObservation: sourceFreshnessObservationSchema.optional(),
   notes: z.string().optional()
 });
 
@@ -29,6 +43,7 @@ export const sourceCadenceEvidenceSchema = z.object({
   latestModified: z.string().optional(),
   etag: z.string().optional(),
   byteSize: z.number().int().nonnegative().optional(),
+  freshnessObservation: sourceFreshnessObservationSchema,
   dailyCounts: z.array(z.object({
     localDate: z.string().min(1),
     rgbCount: z.number().int().nonnegative(),
@@ -114,6 +129,7 @@ export const graphSnapshotSchema = z.object({
 });
 
 export type SourceEvent = z.infer<typeof sourceEventSchema>;
+export type SourceFreshnessObservation = z.infer<typeof sourceFreshnessObservationSchema>;
 export type SourceCadenceEvidence = z.infer<typeof sourceCadenceEvidenceSchema>;
 export type ExtractedObservation = z.infer<typeof extractedObservationSchema>;
 export type GraphNode = z.infer<typeof graphNodeSchema>;

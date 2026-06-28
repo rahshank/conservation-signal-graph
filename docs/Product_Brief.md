@@ -36,11 +36,12 @@ The project cannot make a meaningful speed claim from a stale image, unavailable
 - Is the source official, permissioned, or clearly licensed for this use?
 - Can the system fetch a machine-readable image or frame?
 - Does the source expose `Last-Modified`, `ETag`, image path timestamps, daily counts, or another freshness signal?
+- What is the source freshness observation: checked time, source-reported time, image age, expected cadence, and inference eligibility?
 - How often does the source update?
 - Does the image content actually change across probes?
 - Does the source produce enough recurring events to justify fast inference and graph accumulation?
 
-A slow source can still be useful if many sources run in parallel or each frame requires several model calls. A single stale source should stay in research or fixture mode.
+A slow source can still be useful if many sources run in parallel or each frame requires several model calls. A feed becomes eligible for Groq only when access is allowed, a frame is fetchable, and the freshness observation is `fresh` or `recent`.
 
 ## Context layer
 The graph becomes useful when it combines model observations with trusted human context.
@@ -65,6 +66,7 @@ This is a prototype and capability test. It is not a production conservation sys
 The claim is strongest only after the source-cadence gate passes. Until then, the project shows the architecture, workflow, and test harness, with the source constraint clearly visible.
 
 ## Change log
+- 2026-06-28: Added source freshness observation as the inclusion measure for feeds.
 - 2026-06-28: Renamed the working product to Ethogram Graph and recentered the brief on many recurring sources plus observer context.
 - 2026-06-28: Recentered the brief on the full source-to-inference-to-graph pipeline and added the source-cadence gate.
 - 2026-06-27: Added the persona-led product story and review-console direction.

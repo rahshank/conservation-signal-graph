@@ -66,18 +66,18 @@ export async function createApp(options: {
 
   app.get("/api/sources/probe/phenocam", async (_request, response) => {
     const result = await phenocamProbe();
-    const { totalSources, cadenceCandidates, staleSnapshots, failed } = result.summary;
-    if (cadenceCandidates > 0) {
+    const { totalSources, inferenceEligible, fresh, recent, staleFreshness, unknownFreshness, staleSnapshots, failed } = result.summary;
+    if (inferenceEligible > 0) {
       store.setSourceGate({
         status: "ready_for_probe",
-        label: "Source cadence candidates found",
-        detail: `${cadenceCandidates} of ${totalSources} PhenoCam sources returned current cadence evidence. ${staleSnapshots} stale, ${failed} failed.`
+        label: "Fresh source candidates found",
+        detail: `${inferenceEligible} of ${totalSources} PhenoCam sources are eligible for inference now. ${fresh} fresh, ${recent} recent, ${staleFreshness} stale freshness, ${unknownFreshness} unknown, ${failed} failed.`
       });
     } else {
       store.setSourceGate({
         status: "fixture_only",
-        label: "No cadence source passed",
-        detail: `${totalSources} PhenoCam sources checked. ${staleSnapshots} stale, ${failed} failed. Keep the app in fixture or research mode.`
+        label: "No fresh source passed",
+        detail: `${totalSources} PhenoCam sources checked. ${staleFreshness} stale freshness, ${unknownFreshness} unknown freshness, ${staleSnapshots} stale source records, ${failed} failed. Keep the app in fixture or research mode.`
       });
     }
     response.json(result);

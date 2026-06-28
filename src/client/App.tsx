@@ -11,6 +11,11 @@ type CadenceProbeResult = {
   summary: {
     totalSources: number;
     cadenceCandidates: number;
+    inferenceEligible: number;
+    fresh: number;
+    recent: number;
+    staleFreshness: number;
+    unknownFreshness: number;
     staleSnapshots: number;
     failed: number;
   };
@@ -74,7 +79,7 @@ export function App() {
     const result = (await response.json()) as CadenceProbeResult;
     setCadenceProbe(result);
     await refreshState();
-    setStatus(`${result.summary.cadenceCandidates} updating source candidates found`);
+    setStatus(`${result.summary.inferenceEligible} source candidates eligible for inference`);
   }
 
   const latest = state.events[0];
@@ -188,7 +193,7 @@ function CadenceCandidates({ probe }: { probe: CadenceProbeResult }) {
           <p className="eyebrow">Source cadence</p>
           <h2>Updating Source Candidates</h2>
         </div>
-        <span>{probe.summary.cadenceCandidates} / {probe.summary.totalSources} passed</span>
+        <span>{probe.summary.inferenceEligible} / {probe.summary.totalSources} eligible</span>
       </div>
       <div className="eventList">
         {probe.results.map((result) => {
@@ -207,6 +212,7 @@ function CadenceCandidates({ probe }: { probe: CadenceProbeResult }) {
             <article className="event" key={result.evidence.sourceId}>
               <div>
                 <h3>{result.evidence.sourceName}</h3>
+                <p>{result.evidence.freshnessObservation.summary}</p>
                 <p>{result.evidence.cadenceSummary}</p>
               </div>
               <span className={result.evidence.status === "cadence_candidate" ? "sourceBadge live" : "sourceBadge fixture"}>

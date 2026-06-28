@@ -138,6 +138,18 @@ describe("source cadence probe route", () => {
               latestModified: "Sat, 27 Jun 2026 19:49:02 GMT",
               etag: "\"6a40292e-535c4\"",
               byteSize: 341444,
+              freshnessObservation: {
+                checkedAt: "2026-06-28T05:31:23.000Z",
+                sourceReportedAt: "2026-06-28T05:25:02.000Z",
+                ageMs: 381000,
+                ageLabel: "6 min old",
+                status: "fresh",
+                basis: "last_modified",
+                expectedCadenceSeconds: 2274,
+                expectedFramesPerDay: 38,
+                includeForInference: true,
+                summary: "Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day"
+              },
               dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
               cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
               recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
@@ -147,6 +159,11 @@ describe("source cadence probe route", () => {
         summary: {
           totalSources: 1,
           cadenceCandidates: 1,
+          inferenceEligible: 1,
+          fresh: 1,
+          recent: 0,
+          staleFreshness: 0,
+          unknownFreshness: 0,
           staleSnapshots: 0,
           failed: 0
         }
@@ -162,8 +179,8 @@ describe("source cadence probe route", () => {
 
       const snapshotResponse = await fetch(`${testServer.baseUrl}/api/state`);
       const snapshot = await snapshotResponse.json();
-      expect(snapshot.sourceGate.label).toBe("Source cadence candidates found");
-      expect(snapshot.sourceGate.detail).toContain("1 of 1 PhenoCam sources");
+      expect(snapshot.sourceGate.label).toBe("Fresh source candidates found");
+      expect(snapshot.sourceGate.detail).toContain("1 of 1 PhenoCam sources are eligible");
     } finally {
       await testServer.close();
       await graphRepository.close();

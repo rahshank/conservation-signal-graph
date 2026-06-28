@@ -38,9 +38,43 @@ The probe checks selected PhenoCam sites for:
 - `Last-Modified`
 - `ETag`
 - byte size
+- freshness observation
 - recent daily image counts
 
 This proves source cadence before any Groq frame analysis. It also creates a route to test many sources at once.
+
+## Freshness Observation
+
+Each included feed needs a source freshness observation. The current PhenoCam implementation records:
+
+| Field | Role |
+| --- | --- |
+| `checkedAt` | when the system inspected the source |
+| `sourceReportedAt` | freshest timestamp exposed by the source |
+| `ageMs` / `ageLabel` | how old the source image was at check time |
+| `status` | `fresh`, `recent`, `stale`, or `unknown` |
+| `basis` | which signal supports the read, currently `last_modified` for PhenoCam images |
+| `expectedCadenceSeconds` | estimated update interval from daily RGB count |
+| `expectedFramesPerDay` | RGB frames per day from source daily counts |
+| `includeForInference` | whether this source should be eligible for Groq |
+| `summary` | short UI/evidence line |
+
+Example:
+
+```text
+Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day
+```
+
+Inclusion rule: permissioned source, fetchable frame, and freshness status `fresh` or `recent`.
+
+The probe summary separates broad source candidates from feeds eligible for inference now:
+
+| Summary field | Meaning |
+| --- | --- |
+| `cadenceCandidates` | active source records with cadence evidence |
+| `inferenceEligible` | feeds whose freshness observation allows Groq now |
+| `fresh` / `recent` | freshness states that can be included |
+| `staleFreshness` / `unknownFreshness` | freshness states that stay out of inference |
 
 ## PhenoCam Tactical Candidate
 
@@ -84,5 +118,6 @@ For Big Bear-style sources, the review might concern whether a visual observatio
 - [NPS developer API documentation](https://www.nps.gov/subjects/developer/api-documentation.htm)
 
 ## Change Log
+- 2026-06-28: Added source freshness observations and the inclusion rule for feeds.
 - 2026-06-28: Added the implemented PhenoCam probe route and observer-context gate.
 - 2026-06-28: Created the source-cadence gate after the NPS webcam path failed the current-source proof.

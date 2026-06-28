@@ -21,6 +21,7 @@ Define the working terms used in the Ethogram Graph project.
 | Periodic snapshot | A source that updates still images at a measured cadence. It can be useful for repeated inference even when it is not a video stream. |
 | Static image benchmark | A known-context image used to test model extraction quality. It does not prove source freshness or Groq speed value. |
 | Source cadence evidence | Freshness and update proof for a source: API dates, headers, daily counts, hashes, timestamps, and observed changes across probes. |
+| Source freshness observation | A measured read of one feed at one check time: when it was checked, what timestamp the source reported, how old the image was, expected cadence, and whether the feed is eligible for inference. |
 | Source adapter | Code that turns an external source, such as the NPS webcam API, into the project’s internal `SourceEvent` shape. |
 | Knowledge graph | A connected model of entities and relationships. In this project, sources, frames, observations, species candidates, risks, actions, questions, and model runs become graph nodes. |
 | Neo4j | A graph database. It stores nodes and relationships and supports graph queries. |
@@ -38,6 +39,7 @@ Define the working terms used in the Ethogram Graph project.
 | Extraction mode | Whether observations came from fixtures or Groq. `fixture` proves wiring. `groq` proves real model inference. |
 
 ## Change Log
+- 2026-06-28: Added source freshness observation.
 - 2026-06-28: Added Ethogram Graph, periodic snapshots, source cadence evidence, observer context, and context claims.
 - 2026-06-27: Added image normalization.
 - 2026-06-27: Created the first project glossary.
