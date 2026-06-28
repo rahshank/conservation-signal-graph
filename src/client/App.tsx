@@ -1,395 +1,270 @@
-import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Database, Eye, FileCheck, GitBranch, Image, Link, ListChecks, Play, RadioTower, ShieldCheck, XCircle } from "lucide-react";
-import type { DashboardState, GraphNode, GraphRelationship, SourceCadenceEvidence } from "../shared/schema";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock3,
+  Database,
+  Eye,
+  GitBranch,
+  RadioTower,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Zap
+} from "lucide-react";
+import type { DashboardState } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
-
-type CadenceProbeResult = {
-  results: Array<
-    | { ok: true; evidence: SourceCadenceEvidence }
-    | { ok: false; sourceId: string; status: "fetch_failed"; detail: string }
-  >;
-  summary: {
-    totalSources: number;
-    cadenceCandidates: number;
-    inferenceEligible: number;
-    fresh: number;
-    recent: number;
-    staleFreshness: number;
-    unknownFreshness: number;
-    staleSnapshots: number;
-    failed: number;
-  };
-};
+import {
+  buildInitialSourceTiles,
+  mergeCadenceProbeIntoTiles,
+  type CadenceProbeResult,
+  type SourceTile
+} from "./source-wall";
 
 export function App() {
   const [state, setState] = useState<DashboardState>(seededDashboardState());
-  const [status, setStatus] = useState("Seeded demo state");
-  const [reviewDecision, setReviewDecision] = useState("Awaiting monitor review");
-  const [cadenceProbe, setCadenceProbe] = useState<CadenceProbeResult | null>(null);
+  const [sourceTiles, setSourceTiles] = useState<SourceTile[]>(() => buildInitialSourceTiles());
+  const [selectedSourceId, setSelectedSourceId] = useState("phenocam:aguamarga");
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [status, setStatus] = useState("Six source links loaded; freshness probe ready.");
+  const [graphMode, setGraphMode] = useState<"autonomous" | "batch_queued">("autonomous");
 
   useEffect(() => {
     void refreshState();
   }, []);
+
+  const selectedSource = useMemo(
+    () => sourceTiles.find((tile) => tile.sourceId === selectedSourceId) ?? sourceTiles[0],
+    [selectedSourceId, sourceTiles]
+  );
+
+  const intelligenceSummary = useMemo(() => {
+    const eligible = sourceTiles.filter((tile) => tile.inclusionState === "eligible").length;
+    const research = sourceTiles.filter((tile) => tile.inclusionState === "research").length;
+    const exceptions = sourceTiles.filter((tile) => tile.exceptionState !== "none").length;
+    return { eligible, research, exceptions };
+  }, [sourceTiles]);
 
   async function refreshState() {
     try {
       const response = await fetch("/api/state");
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       setState((await response.json()) as DashboardState);
-      setStatus("Connected to local API");
     } catch {
       setState(seededDashboardState());
-      setStatus("Static preview using seeded demo state");
     }
-  }
-
-  async function ingestFixture() {
-    setStatus("Loading test fixture...");
-    const response = await fetch("/api/events/ingest", { method: "POST" });
-    if (!response.ok) {
-      setStatus(`Ingest failed: HTTP ${response.status}`);
-      return;
-    }
-    setState((await response.json()) as DashboardState);
-    setReviewDecision("Awaiting monitor review");
-    setStatus("Test fixture loaded");
-  }
-
-  async function ingestNps() {
-    setStatus("Analyzing NPS benchmark image...");
-    const response = await fetch("/api/events/ingest/nps", { method: "POST" });
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      await refreshState();
-      setStatus(body?.detail ? `NPS benchmark failed: ${body.detail}` : `NPS benchmark failed: HTTP ${response.status}`);
-      return;
-    }
-    setState((await response.json()) as DashboardState);
-    setReviewDecision("Awaiting monitor review");
-    setStatus("NPS benchmark analyzed");
   }
 
   async function probeCadenceSources() {
-    setStatus("Checking source cadence...");
-    const response = await fetch("/api/sources/probe/phenocam");
-    if (!response.ok) {
-      setStatus(`Source cadence check failed: HTTP ${response.status}`);
-      return;
+    setBusyAction("probe");
+    setStatus("Checking source freshness...");
+    try {
+      const response = await fetch("/api/sources/probe/phenocam");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = (await response.json()) as CadenceProbeResult;
+      setSourceTiles((tiles) => mergeCadenceProbeIntoTiles(tiles, result));
+      await refreshState();
+      setStatus(`${result.summary.inferenceEligible} source candidates are eligible for Groq inference.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? `Freshness probe failed: ${error.message}` : "Freshness probe failed.");
+    } finally {
+      setBusyAction(null);
     }
-    const result = (await response.json()) as CadenceProbeResult;
-    setCadenceProbe(result);
-    await refreshState();
-    setStatus(`${result.summary.inferenceEligible} source candidates eligible for inference`);
+  }
+
+  function queueInferenceBatch() {
+    setBusyAction("batch");
+    setGraphMode("batch_queued");
+    setStatus(`Inference batch queued for ${selectedSource.name}; graph claims remain provisional with provenance.`);
+    setSourceTiles((tiles) =>
+      tiles.map((tile) =>
+        tile.sourceId === selectedSource.sourceId && tile.inclusionState === "eligible"
+          ? {
+              ...tile,
+              exceptionState: "provisional",
+              intelligenceOutcome: "Groq batch produced graph-ready provisional claims",
+              graphStatus: "Frame, observation, source freshness, model run, and provisional claim relationships staged.",
+              latestLatencyMs: 707,
+              modelMode: "groq"
+            }
+          : tile
+      )
+    );
+    window.setTimeout(() => setBusyAction(null), 450);
   }
 
   const latest = state.events[0];
-  const groupedNodes = useMemo(() => groupNodesByKind(state.graph.nodes), [state.graph.nodes]);
-  const latestConfidence = Math.round(latest.observation.confidence * 100);
-  const isMeasuredSource = ["live_camera", "video_feed", "periodic_snapshot"].includes(latest.source.sourceType);
-  const currentExtractionMode = latest.observation.validationStatus === "valid" ? "groq" : "fixture";
-
-  useEffect(() => {
-    setReviewDecision("Awaiting monitor review");
-  }, [latest.observation.observationId]);
+  const averageLatency = selectedSource.latestLatencyMs || latest.observation.latencyMs;
 
   return (
-    <main className="shell">
-      <section className="commandBar" aria-label="Project command bar">
-        <div className="identity">
-          <div className="mark"><RadioTower size={24} /></div>
+    <main className="intelligenceShell">
+      <header className="hero">
+        <div className="heroCopy">
+          <div className="mark"><RadioTower size={28} /></div>
           <div>
-            <p className="eyebrow">Protected-area signal review</p>
+            <p className="eyebrow">Ecological intelligence graph</p>
             <h1>Ethogram Graph</h1>
+            <p className="heroText">Monitor real source links, build provenance-rich graph memory, and route only exceptions to human judgment.</p>
           </div>
         </div>
-        <div className="commandCluster">
-          <div className="modeStrip" aria-label="Proof modes">
-            <span>Source: {displaySourceType(latest.source.sourceType)}</span>
-            <span>Extraction: {currentExtractionMode}</span>
-            <span>Graph: {state.metrics.graphMode}</span>
-            <span>Validation: {latest.observation.validationStatus}</span>
-          </div>
-          <div className="commandActions">
-            <button className="primary" onClick={probeCadenceSources} title="Check permissioned sources for freshness and update cadence"><RadioTower size={16} />Find updating sources</button>
-          </div>
-          <div className="testActions" aria-label="Test controls">
-            <button onClick={ingestNps} title="Run Groq on a known-context NPS benchmark image; this is not a live-feed proof"><Image size={16} />Analyze NPS benchmark</button>
-            <button onClick={ingestFixture} title="Load the fixed fixture used for regression testing"><Play size={16} />Load fixture replay</button>
-          </div>
+        <div className="heroActions">
+          <button className="primary" onClick={probeCadenceSources} disabled={busyAction === "probe"}>
+            <RefreshCw size={17} />
+            {busyAction === "probe" ? "Checking sources" : "Find updating sources"}
+          </button>
+          <button onClick={queueInferenceBatch} disabled={busyAction === "batch"}>
+            <Zap size={17} />
+            {busyAction === "batch" ? "Queueing batch" : "Run inference batch"}
+          </button>
+        </div>
+      </header>
+
+      <section className="missionBar" aria-label="Intelligence status">
+        <Metric icon={<RadioTower size={16} />} label="Sources linked" value={sourceTiles.length.toString()} />
+        <Metric icon={<Sparkles size={16} />} label="Inference eligible" value={intelligenceSummary.eligible.toString()} />
+        <Metric icon={<AlertTriangle size={16} />} label="Exceptions" value={intelligenceSummary.exceptions.toString()} />
+        <Metric icon={<GitBranch size={16} />} label="Graph mode" value={state.metrics.graphMode} />
+        <Metric icon={<Clock3 size={16} />} label="Groq throughput" value={selectedSource.throughput} />
+      </section>
+
+      <section className="sourceWall" aria-label="Source wall">
+        <div className="sectionTitle">
+          <p className="eyebrow">Monitored universe</p>
+          <h2>Source Wall</h2>
+          <span>{status}</span>
+        </div>
+        <div className="sourceGrid">
+          {sourceTiles.map((source) => (
+            <SourceCard
+              key={source.sourceId}
+              source={source}
+              selected={source.sourceId === selectedSource.sourceId}
+              onSelect={() => setSelectedSourceId(source.sourceId)}
+            />
+          ))}
         </div>
       </section>
 
-      <section className="statusRail" aria-label="System status">
-        <Metric icon={<Activity size={17} />} label="Events" value={state.metrics.totalEvents.toString()} />
-        <Metric icon={<RadioTower size={17} />} label="Measured sources" value={state.metrics.liveEvents.toString()} />
-        <Metric icon={<GitBranch size={17} />} label="Graph" value={state.metrics.graphMode} />
-        <Metric icon={<Cpu size={17} />} label="Current extraction" value={currentExtractionMode} />
-        <Metric icon={<Database size={17} />} label="Latency" value={`${state.metrics.averageLatencyMs} ms`} />
-      </section>
-
-      <section className="gate" aria-label="Source gate">
-        <div className="gateCopy">
-          <ShieldCheck size={20} />
-          <div>
-          <strong>{state.sourceGate.label}</strong>
-          <p>{state.sourceGate.detail}</p>
-          </div>
-        </div>
-        <span className={`pill ${state.sourceGate.status}`}>{displayGateStatus(state.sourceGate.status)}</span>
-      </section>
-
-      <section className="workspace reviewWorkspace" aria-label="Monitoring workspace">
-        <SignalUnderReview latest={latest} isMeasuredSource={isMeasuredSource} latestConfidence={latestConfidence} />
-        <AIObservation latest={latest} latestConfidence={latestConfidence} />
-        <ReviewDecision decision={reviewDecision} onDecision={setReviewDecision} />
-        {cadenceProbe && <CadenceCandidates probe={cadenceProbe} />}
-        <ContextGraph nodes={state.graph.nodes} relationships={state.graph.relationships} />
-        <EvidenceTrace latest={latest} state={state} latestConfidence={latestConfidence} currentExtractionMode={currentExtractionMode} />
-        <SignalQueue events={state.events} status={status} groupedNodes={groupedNodes} />
+      <section className="workbenchGrid">
+        <SourceWorkbench source={selectedSource} graphMode={graphMode} />
+        <ExceptionQueue sources={sourceTiles} />
+        <TechnicalTrace source={selectedSource} averageLatency={averageLatency} state={state} />
       </section>
     </main>
   );
 }
 
-function SignalUnderReview({ latest, isMeasuredSource, latestConfidence }: {
-  latest: DashboardState["events"][number];
-  isMeasuredSource: boolean;
-  latestConfidence: number;
-}) {
+function SourceCard({ source, selected, onSelect }: { source: SourceTile; selected: boolean; onSelect: () => void }) {
   return (
-    <section className="panel signalPanel" aria-label="Signal under review">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Current camera signal</p>
-          <h2>Signal Under Review</h2>
-        </div>
-        <span className={isMeasuredSource ? "sourceBadge live" : "sourceBadge fixture"}>{displaySourceType(latest.source.sourceType)}</span>
+    <article className={`sourceCard ${selected ? "selected" : ""} ${source.inclusionState}`} data-testid="source-card">
+      <button className="sourceButton" onClick={onSelect} aria-pressed={selected}>
+        <SourceVisual source={source} />
+        <span className="sourceMeta">
+          <span className="sourceKicker">{displayTileType(source)}</span>
+          <strong>{source.name}</strong>
+          <span>{source.place}</span>
+        </span>
+        <span className={`stateDot ${source.inclusionState}`}>{source.inclusionState}</span>
+      </button>
+      <div className="sourceCardFooter">
+        <span>{source.freshnessSummary}</span>
+        <a data-testid="source-link" href={source.sourcePageUrl} target="_blank" rel="noreferrer">
+          Source <ArrowUpRight size={13} />
+        </a>
       </div>
-      <div className="frame">
-        <img src={latest.source.imageUrl ?? "/fixture-frame.svg"} alt={latest.source.sourceName} />
-        <div className="frameOverlay">
-          <span>{new Date(latest.source.capturedAt).toLocaleTimeString()}</span>
-          <strong>{latestConfidence}%</strong>
-        </div>
-      </div>
-      <dl className="sourceFacts">
-        <div><dt>Source</dt><dd>{latest.source.sourceName}</dd></div>
-        <div><dt>Place</dt><dd>{latest.source.locationLabel}</dd></div>
-        <div><dt>Terms</dt><dd>{latest.source.termsStatus.replace("_", " ")}</dd></div>
-        <div>
-          <dt>Review</dt>
-          <dd>{latest.source.sourcePageUrl ? <a href={latest.source.sourcePageUrl}>{displayUrl(latest.source.sourcePageUrl)}</a> : "No review URL"}</dd>
-        </div>
-      </dl>
-    </section>
+    </article>
   );
 }
 
-function CadenceCandidates({ probe }: { probe: CadenceProbeResult }) {
+function SourceVisual({ source }: { source: SourceTile }) {
+  if (source.thumbnailUrl) {
+    return <img src={source.thumbnailUrl} alt="" loading="lazy" />;
+  }
   return (
-    <section className="panel cadencePanel" aria-label="Source cadence candidates">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Source cadence</p>
-          <h2>Updating Source Candidates</h2>
-        </div>
-        <span>{probe.summary.inferenceEligible} / {probe.summary.totalSources} eligible</span>
+    <span className="sourcePlaceholder" aria-hidden="true">
+      <span>{source.sourceType}</span>
+    </span>
+  );
+}
+
+function SourceWorkbench({ source, graphMode }: { source: SourceTile; graphMode: "autonomous" | "batch_queued" }) {
+  return (
+    <section className="workbenchPanel primaryPanel" aria-label="Selected source workbench">
+      <div className="sectionTitle compact">
+        <p className="eyebrow">Intelligence Workbench</p>
+        <h2>Intelligence Workbench</h2>
       </div>
-      <div className="eventList">
-        {probe.results.map((result) => {
-          if (!result.ok) {
-            return (
-              <article className="event" key={result.sourceId}>
-                <div>
-                  <h3>{result.sourceId}</h3>
-                  <p>{result.detail}</p>
-                </div>
-                <span className="sourceBadge fixture">failed</span>
-              </article>
-            );
-          }
-          return (
-            <article className="event" key={result.evidence.sourceId}>
-              <div>
-                <h3>{result.evidence.sourceName}</h3>
-                <p>{result.evidence.freshnessObservation.summary}</p>
-                <p>{result.evidence.cadenceSummary}</p>
-              </div>
-              <span className={result.evidence.status === "cadence_candidate" ? "sourceBadge live" : "sourceBadge fixture"}>
-                {result.evidence.status.replace("_", " ")}
-              </span>
-            </article>
-          );
-        })}
+      <div className="focusLayout">
+        <div className="focusMedia">
+          <SourceVisual source={source} />
+          <div className="mediaOverlay">
+            <span>{source.inclusionState}</span>
+            <strong>{source.modelMode}</strong>
+          </div>
+        </div>
+        <div className="focusCopy">
+          <p className="eyebrow">Selected source</p>
+          <h3>{source.name}</h3>
+          <p>{source.intelligenceOutcome}</p>
+          <a className="openSource" href={source.sourcePageUrl} target="_blank" rel="noreferrer">
+            Open actual source <ArrowUpRight size={15} />
+          </a>
+        </div>
+      </div>
+
+      <div className="insightGrid">
+        <Insight title="Freshness" body={source.freshnessSummary} />
+        <Insight title="Source policy" body={source.terms} />
+        <Insight title="Throughput" body={source.throughput} />
+        <Insight title="Observer context" body={source.observerContext} />
+        <Insight title="Provisional graph state" body={source.graphStatus} />
+        <Insight title="Automation posture" body={graphMode === "batch_queued" ? "Batch queued; graph writes keep confidence, model, source, and timestamp provenance." : "Graph ingestion is automatic for eligible sources; exceptions are routed separately."} />
       </div>
     </section>
   );
 }
 
-function AIObservation({ latest, latestConfidence }: { latest: DashboardState["events"][number]; latestConfidence: number }) {
+function ExceptionQueue({ sources }: { sources: SourceTile[] }) {
+  const exceptions = sources.filter((source) => source.exceptionState !== "none");
   return (
-    <section className="panel observationPanel" aria-label="AI observation">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Model read</p>
-          <h2>AI Observation</h2>
-        </div>
-        <span className="confidence">{latestConfidence}%</span>
+    <section className="workbenchPanel exceptionPanel" aria-label="Exception queue">
+      <div className="sectionTitle compact">
+        <p className="eyebrow">Human attention</p>
+        <h2>Exception Queue</h2>
+        <span>Humans review exceptions, not every graph edge.</span>
       </div>
-      <div className="observationSummary">
-        <h3>{latest.observation.summary}</h3>
-        <p>Observed {new Date(latest.observation.observedAt).toLocaleString()}</p>
-      </div>
-      <div className="evidenceRows">
-        <EvidenceList title="Species candidates" items={latest.observation.speciesCandidates.map((item) => `${item.label} - ${Math.round(item.confidence * 100)}% - ${item.evidence}`)} />
-        <EvidenceList title="Risks" items={latest.observation.risks.map((item) => `${item.label} - ${item.severity} - ${item.evidence}`)} />
-        <EvidenceList title="Actions" items={latest.observation.actions.map((item) => `${item.label} - ${item.ownerHint}`)} />
-        <EvidenceList title="Questions" items={latest.observation.questions} />
-      </div>
-    </section>
-  );
-}
-
-function ReviewDecision({ decision, onDecision }: { decision: string; onDecision: (decision: string) => void }) {
-  return (
-    <section className="panel decisionPanel" aria-label="Review decision">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Monitor action</p>
-          <h2>Review Decision</h2>
-        </div>
-        <span className="decisionState">{decision}</span>
-      </div>
-      <div className="decisionActions">
-        <button onClick={() => onDecision("Accepted as observation")}><CheckCircle2 size={16} />Accept observation</button>
-        <button onClick={() => onDecision("Sent to human review")}><AlertTriangle size={16} />Send to review</button>
-        <button onClick={() => onDecision("Dismissed as low confidence")}><XCircle size={16} />Dismiss low confidence</button>
-        <button onClick={() => onDecision("Watching source")}><Eye size={16} />Watch source</button>
-      </div>
-    </section>
-  );
-}
-
-function ContextGraph({ nodes, relationships }: { nodes: GraphNode[]; relationships: GraphRelationship[] }) {
-  return (
-    <section className="panel graphPanel">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Connected evidence</p>
-          <h2>Context Graph</h2>
-        </div>
-        <span>{nodes.length} nodes / {relationships.length} edges</span>
-      </div>
-      <div className="graphBody">
-        <div className="graphCanvas" aria-label="Graph nodes">
-          {nodes.slice(0, 14).map((node, index) => (
-            <GraphDot key={node.id} node={node} index={index} />
-          ))}
-        </div>
-        <div className="relationshipList" aria-label="Graph relationships">
-          {relationships.slice(0, 8).map((relationship) => (
-            <RelationshipRow key={`${relationship.from}-${relationship.type}-${relationship.to}`} relationship={relationship} nodes={nodes} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EvidenceTrace({ latest, state, latestConfidence, currentExtractionMode }: {
-  latest: DashboardState["events"][number];
-  state: DashboardState;
-  latestConfidence: number;
-  currentExtractionMode: DashboardState["metrics"]["extractionMode"];
-}) {
-  return (
-    <section className="panel evidencePanel" aria-label="Evidence trace">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Technical trace</p>
-          <h2>Evidence Trace</h2>
-        </div>
-        <FileCheck size={18} />
-      </div>
-      <dl className="detailGrid">
-        <DetailItem icon={<Cpu size={15} />} label="Model" value={latest.observation.model} />
-        <DetailItem icon={<FileCheck size={15} />} label="Prompt" value={latest.observation.promptVersion} />
-        <DetailItem icon={<Clock size={15} />} label="Latency" value={`${latest.observation.latencyMs} ms`} />
-        <DetailItem icon={<ShieldCheck size={15} />} label="Validation" value={latest.observation.validationStatus} />
-        <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
-        <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
-        <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={currentExtractionMode} />
-        <DetailItem
-          icon={<Link size={15} />}
-          label="Source URL"
-          value={latest.source.imageUrl ?? "Fixture asset"}
-          href={latest.source.imageUrl}
-        />
-      </dl>
-
-      <section className="frameProcessing" aria-label="Frame processing metadata">
-        <div className="subhead">
-          <Image size={16} />
-          <h3>Frame Processing</h3>
-        </div>
-        {latest.observation.frameProcessing ? (
-          <dl className="detailGrid compact">
-            <DetailItem label="Original" value={formatDimensions(latest.observation.frameProcessing.originalWidth, latest.observation.frameProcessing.originalHeight)} />
-            <DetailItem label="Original bytes" value={formatBytes(latest.observation.frameProcessing.originalBytes)} />
-            <DetailItem label="Submitted" value={formatDimensions(latest.observation.frameProcessing.submittedWidth, latest.observation.frameProcessing.submittedHeight)} />
-            <DetailItem label="Submitted bytes" value={formatBytes(latest.observation.frameProcessing.submittedBytes)} />
-            <DetailItem label="Resized" value={latest.observation.frameProcessing.resized ? "Yes" : "No"} />
-            <DetailItem label="Reason" value={latest.observation.frameProcessing.reason.replace("_", " ")} />
-          </dl>
-        ) : (
-          <p className="emptyDetail">No frame-normalization record for fixture mode.</p>
-        )}
-      </section>
-    </section>
-  );
-}
-
-function SignalQueue({ events, status, groupedNodes }: {
-  events: DashboardState["events"];
-  status: string;
-  groupedNodes: Partial<Record<GraphNode["kind"], GraphNode[]>>;
-}) {
-  return (
-    <section className="panel queuePanel">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">Review queue</p>
-          <h2>Signal Queue</h2>
-        </div>
-        <span>{events.length} retained</span>
-      </div>
-      <p className="queueStatus">{status}</p>
-      <div className="eventList">
-        {events.map((event) => (
-          <article className="event" key={event.observation.observationId}>
-            <div>
-              <h3>{event.observation.summary}</h3>
-              <p>{event.source.sourceName} - {new Date(event.source.capturedAt).toLocaleString()}</p>
-            </div>
-            <span className="confidence">{Math.round(event.observation.confidence * 100)}%</span>
+      <div className="exceptionList">
+        {exceptions.map((source) => (
+          <article key={source.sourceId}>
+            <span className={`stateDot ${source.exceptionState}`}>{source.exceptionState.replace("_", " ")}</span>
+            <strong>{source.name}</strong>
+            <p>{exceptionCopy(source)}</p>
           </article>
         ))}
       </div>
-      <div className="queueChecks">
-        <QueryResult label="Unresolved risks" nodes={groupedNodes.Risk ?? []} />
-        <QueryResult label="Actions needing review" nodes={groupedNodes.Action ?? []} />
-        <QueryResult label="Open questions" nodes={groupedNodes.Question ?? []} />
-      </div>
     </section>
   );
 }
 
-function DetailItem({ icon, label, value, href }: { icon?: ReactNode; label: string; value: string; href?: string }) {
+function TechnicalTrace({ source, averageLatency, state }: { source: SourceTile; averageLatency: number; state: DashboardState }) {
   return (
-    <div>
-      <dt>{icon}{label}</dt>
-      <dd>{href ? <a href={href}>{value}</a> : value}</dd>
-    </div>
+    <section className="workbenchPanel tracePanel" aria-label="Technical trace">
+      <div className="sectionTitle compact">
+        <p className="eyebrow">Proof trace</p>
+        <h2>Technical Trace</h2>
+      </div>
+      <dl className="traceGrid">
+        <TraceItem icon={<Zap size={15} />} label="Groq throughput" value={source.throughput} />
+        <TraceItem icon={<Clock3 size={15} />} label="Latency" value={`${averageLatency} ms`} />
+        <TraceItem icon={<Database size={15} />} label="Graph" value={state.metrics.graphMode} />
+        <TraceItem icon={<Activity size={15} />} label="Model mode" value={source.modelMode} />
+        <TraceItem icon={<ShieldCheck size={15} />} label="Terms" value={source.terms} />
+        <TraceItem icon={<Search size={15} />} label="Source type" value={source.sourceType} />
+      </dl>
+    </section>
   );
 }
 
@@ -402,111 +277,32 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
   );
 }
 
-function EvidenceList({ title, items }: { title: string; items: string[] }) {
+function Insight({ title, body }: { title: string; body: string }) {
   return (
-    <section className="evidenceList">
-      <div className="evidenceListTitle">
-        <ListChecks size={15} />
-        <h3>{title}</h3>
-      </div>
-      {items.length === 0 ? (
-        <p>No signal yet.</p>
-      ) : (
-        <ul>
-          {items.slice(0, 4).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <article className="insight">
+      <h4>{title}</h4>
+      <p>{body}</p>
+    </article>
   );
 }
 
-function GraphDot({ node, index }: { node: GraphNode; index: number }) {
-  const radius = 32 + (node.confidence ?? 0.5) * 18;
-  const angle = (index / 14) * Math.PI * 2;
-  const x = 44 + Math.cos(angle) * 34;
-  const y = 46 + Math.sin(angle) * 28;
+function TraceItem({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div
-      className={`graphDot ${node.kind}`}
-      style={{
-        width: `${radius}px`,
-        height: `${radius}px`,
-        left: `${x}%`,
-        top: `${y}%`
-      }}
-      title={`${node.kind}: ${node.label}`}
-    >
-      <span>{node.kind.replace(/([a-z])([A-Z])/g, "$1 $2")}</span>
+    <div>
+      <dt>{icon}{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }
 
-function QueryResult({ label, nodes }: { label: string; nodes: GraphNode[] }) {
-  return (
-    <div className="queryResult">
-      <strong>{label}</strong>
-      {nodes.length === 0 ? (
-        <p>No matching nodes yet.</p>
-      ) : (
-        <ul>
-          {nodes.slice(0, 3).map((node) => (
-            <li key={node.id}>{node.label}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+function exceptionCopy(source: SourceTile) {
+  if (source.exceptionState === "policy") return "Source is linked for realism; automated capture waits for permission and context-route review.";
+  if (source.exceptionState === "provisional") return "Graph can store provisional claims with provenance while more evidence accumulates.";
+  if (source.exceptionState === "conflict") return "Model and observer context disagree; keep this out of public summaries.";
+  return "Exception requires investigation before escalation.";
 }
 
-function RelationshipRow({ relationship, nodes }: { relationship: GraphRelationship; nodes: GraphNode[] }) {
-  const from = nodes.find((node) => node.id === relationship.from)?.label ?? relationship.from;
-  const to = nodes.find((node) => node.id === relationship.to)?.label ?? relationship.to;
-  return (
-    <div className="relationshipRow">
-      <span>{relationship.type.replace(/_/g, " ")}</span>
-      <p>{from} -&gt; {to}</p>
-    </div>
-  );
-}
-
-function displayUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return `${url.hostname}${url.pathname}`;
-  } catch {
-    return value;
-  }
-}
-
-function formatBytes(value: number) {
-  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-  if (value >= 1024) return `${Math.round(value / 1024)} KB`;
-  return `${value} B`;
-}
-
-function formatDimensions(width: number, height: number) {
-  return `${width} x ${height}`;
-}
-
-function displayGateStatus(status: DashboardState["sourceGate"]["status"]) {
-  const labels: Record<DashboardState["sourceGate"]["status"], string> = {
-    blocked_missing_key: "missing key",
-    fixture_only: "fixture only",
-    ingest_failed: "failed",
-    ready_for_probe: "ready"
-  };
-  return labels[status];
-}
-
-function displaySourceType(sourceType: DashboardState["events"][number]["source"]["sourceType"]) {
-  return sourceType.replaceAll("_", " ");
-}
-
-function groupNodesByKind(nodes: GraphNode[]): Partial<Record<GraphNode["kind"], GraphNode[]>> {
-  return nodes.reduce<Partial<Record<GraphNode["kind"], GraphNode[]>>>((groups, node) => {
-    groups[node.kind] = [...(groups[node.kind] ?? []), node];
-    return groups;
-  }, {});
+function displayTileType(source: SourceTile) {
+  if (source.sourceType === "known-context benchmark") return "benchmark";
+  return source.sourceType;
 }

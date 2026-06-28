@@ -13,6 +13,7 @@ The prototype scaffold is implemented with:
 - TypeScript server and React dashboard
 - NPS source probe with explicit stale/live boundary
 - PhenoCam cadence probe for permissioned, frequently updating ecological snapshots
+- Source-wall intelligence prototype with real source links and permitted PhenoCam imagery
 - Groq extraction boundary
 - Neo4j graph repository boundary
 - Fixture extractor for local development
@@ -28,11 +29,12 @@ Agentic product standard: [Agentic Product Development Standard](docs/Agentic_Pr
 Credential handling runbook: [Credential Handling Runbook](docs/Credential_Handling_Runbook.md)
 Agentic practice comparison: [Agentic Practice Comparison](docs/Agentic_Practice_Comparison.md)
 Security policy: [Security Policy](SECURITY.md)
-Linear project: [Conservation Signal Graph](https://linear.app/rahshank/project/conservation-signal-graph-2f78e7f44301)
+Linear project: [Ethogram Graph](https://linear.app/rahshank/project/ethogram-graph-2f78e7f44301)
 Pipeline explainer: [Pipeline Explainer](docs/context/Pipeline_Explainer.md)
 Source candidates: [Source Candidate Register](docs/context/Source_Candidate_Register.md)
 Personas and UI story: [Personas](docs/context/Personas.md)
 Product reference research: [Product Reference Research](docs/context/Product_Reference_Research.md)
+Source-wall redesign: [Source Wall Redesign](docs/superpowers/specs/2026-06-28-source-wall-redesign.md)
 Persona-led UI design: [Persona-led UI Design](docs/superpowers/specs/2026-06-27-persona-led-ui-design.md)
 Glossary: [Glossary](docs/context/Glossary.md)
 
@@ -94,6 +96,7 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-28: Added the source-wall intelligence prototype with real source links, permitted PhenoCam imagery, and exception-based human review.
 - 2026-06-28: Renamed the working product to Ethogram Graph and recentered the thesis on many recurring sources plus observer context.
 - 2026-06-27: Switched the default live test path to the NPS Peregrine Falcon Webcam and clarified the UI actions.
 - 2026-06-27: Added persona-led UI story and product reference research links.
