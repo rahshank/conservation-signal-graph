@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createApp } from "../src/server/app";
 import { fixtureObservation, fixtureSourceEvent } from "../src/server/fixtures";
 import { probeNpsWebcamSource } from "../src/server/adapters/nps-webcam";
 import { buildGraphSnapshot } from "../src/server/graph/map-observation";
@@ -59,5 +60,23 @@ describe("graph mapping", () => {
     expect(graph.nodes.some((node) => node.kind === "Observation")).toBe(true);
     expect(graph.relationships.some((relationship) => relationship.type === "RAISES_RISK")).toBe(true);
     expect(graph.relationships.some((relationship) => relationship.type === "REQUIRES_ACTION")).toBe(true);
+  });
+});
+
+describe("production server wiring", () => {
+  it("creates the production app with the SPA fallback route", async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+
+    try {
+      const { graphRepository } = await createApp();
+      await graphRepository.close();
+    } finally {
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
   });
 });

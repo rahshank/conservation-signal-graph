@@ -95,7 +95,7 @@ export async function createApp() {
   if (process.env.NODE_ENV === "production") {
     const dist = path.resolve(__dirname, "../../dist");
     app.use(express.static(dist));
-    app.get("*", (_request, response) => response.sendFile(path.join(dist, "index.html")));
+    app.get(/.*/, (_request, response) => response.sendFile(path.join(dist, "index.html")));
   }
 
   return { app, graphRepository };
