@@ -13,6 +13,8 @@ Primary question: What happened, which sources support it, how confident is the 
 
 The first product surface should optimize for source triage and event review across many feeds. Research, moderation, communications, and technical-evaluator needs all matter because the public claim depends on showing a real pipeline, not a single-caption demo.
 
+Freshness is a persona-serving signal, not a technology status light. The operator and intelligence lead need to know which sources are current enough to watch. The researcher and communications lead need to know whether a claim rests on current evidence. The technical evaluator needs to inspect how the source state was measured.
+
 ## Personas
 
 | Persona | What they care about | What the prototype must prove | Narrative angle |
@@ -35,7 +37,7 @@ The first product surface should optimize for source triage and event review acr
 
 ## UI Hierarchy To Test
 
-1. Source cadence: which feeds are current, permissioned, and worth inference.
+1. Source cadence: which feeds are current, permissioned, and worth inference. This updates automatically and appears as source state.
 2. Candidate event: frame or snapshot, source, timestamp, status, source policy.
 3. AI observation: species, behavior, risk, action, question, confidence, model trace.
 4. Observer context: official notes, moderator updates, trusted observer claims, conflicts.
@@ -54,9 +56,12 @@ The first product surface should optimize for source triage and event review acr
 | Can the build show modern product discipline through source policy, tests, issues, and evidence? | technical evaluator |
 
 ## Current Read
-The current UI pass is being corrected around the multi-source thesis. The first useful action is source-cadence discovery. The next useful surface is event review enriched by observer context, not a human operator staring at one feed.
+The current UI pass is being corrected around the multi-source thesis. Source freshness now belongs to the system: the page checks currentness automatically and reports which sources are usable, stale, blocked, or research-only.
+
+The graph learning surface needs its own story review. It may belong on the same workbench, in a click-through graph view, or in a source detail page depending on which persona is primary for that moment.
 
 ## Change Log
+- 2026-06-28: Added the persona reason for automatic freshness and kept graph-learning placement open for the next story.
 - 2026-06-28: Recentered personas on multi-source source triage, observer context, and Ethogram Graph.
 - 2026-06-27: Updated the current read after implementing the signal review console.
 - 2026-06-27: Added primary product story, persona-led UI acceptance criteria, and the first UI hierarchy.

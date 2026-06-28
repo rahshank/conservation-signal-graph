@@ -8,6 +8,7 @@ describe("source wall model", () => {
     expect(tiles).toHaveLength(6);
     expect(tiles[0].sourceId).toBe("phenocam:aguamarga");
     expect(tiles.every((tile) => tile.sourcePageUrl.startsWith("https://"))).toBe(true);
+    expect(tiles.filter((tile) => tile.sourceType === "periodic snapshot").every((tile) => tile.freshnessSummary === "Pending first automatic check")).toBe(true);
     expect(tiles.find((tile) => tile.sourceId === "benchmark:channel-islands-bird")?.inclusionState).toBe("benchmark");
   });
 

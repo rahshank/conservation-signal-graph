@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -29,11 +29,15 @@ export function App() {
   const [sourceTiles, setSourceTiles] = useState<SourceTile[]>(() => buildInitialSourceTiles());
   const [selectedSourceId, setSelectedSourceId] = useState("phenocam:aguamarga");
   const [busyAction, setBusyAction] = useState<string | null>(null);
-  const [status, setStatus] = useState("Six source links loaded; freshness probe ready.");
+  const [status, setStatus] = useState("Six source links loaded. Source freshness will update automatically.");
   const [graphMode, setGraphMode] = useState<"autonomous" | "batch_queued">("autonomous");
+  const didStartFreshnessCheck = useRef(false);
 
   useEffect(() => {
     void refreshState();
+    if (didStartFreshnessCheck.current) return;
+    didStartFreshnessCheck.current = true;
+    void refreshSourceState("automatic");
   }, []);
 
   const selectedSource = useMemo(
@@ -58,18 +62,18 @@ export function App() {
     }
   }
 
-  async function probeCadenceSources() {
-    setBusyAction("probe");
-    setStatus("Checking source freshness...");
+  async function refreshSourceState(mode: "automatic" | "manual") {
+    setBusyAction("freshness");
+    setStatus(mode === "automatic" ? "Checking source freshness automatically..." : "Refreshing source state...");
     try {
       const response = await fetch("/api/sources/probe/phenocam");
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = (await response.json()) as CadenceProbeResult;
       setSourceTiles((tiles) => mergeCadenceProbeIntoTiles(tiles, result));
       await refreshState();
-      setStatus(`${result.summary.inferenceEligible} source candidates are eligible for Groq inference.`);
+      setStatus(formatFreshnessStatus(result));
     } catch (error) {
-      setStatus(error instanceof Error ? `Freshness probe failed: ${error.message}` : "Freshness probe failed.");
+      setStatus(error instanceof Error ? `Source freshness check failed: ${error.message}` : "Source freshness check failed.");
     } finally {
       setBusyAction(null);
     }
@@ -111,10 +115,6 @@ export function App() {
           </div>
         </div>
         <div className="heroActions">
-          <button className="primary" onClick={probeCadenceSources} disabled={busyAction === "probe"}>
-            <RefreshCw size={17} />
-            {busyAction === "probe" ? "Checking sources" : "Find updating sources"}
-          </button>
           <button onClick={queueInferenceBatch} disabled={busyAction === "batch"}>
             <Zap size={17} />
             {busyAction === "batch" ? "Queueing batch" : "Run inference batch"}
@@ -134,7 +134,13 @@ export function App() {
         <div className="sectionTitle">
           <p className="eyebrow">Monitored universe</p>
           <h2>Source Wall</h2>
-          <span>{status}</span>
+          <div className="sourceWallStatus">
+            <span>{status}</span>
+            <button onClick={() => refreshSourceState("manual")} disabled={busyAction === "freshness"}>
+              <RefreshCw size={15} />
+              {busyAction === "freshness" ? "Checking freshness" : "Refresh source state"}
+            </button>
+          </div>
         </div>
         <div className="sourceGrid">
           {sourceTiles.map((source) => (
@@ -155,6 +161,14 @@ export function App() {
       </section>
     </main>
   );
+}
+
+function formatFreshnessStatus(result: CadenceProbeResult) {
+  const checked = result.summary.totalSources;
+  const eligible = result.summary.inferenceEligible;
+  const sourceNoun = eligible === 1 ? "source is" : "sources are";
+  const checkedNoun = checked === 1 ? "source" : "sources";
+  return `${eligible} eligible ${sourceNoun} current. ${checked} ${checkedNoun} checked automatically.`;
 }
 
 function SourceCard({ source, selected, onSelect }: { source: SourceTile; selected: boolean; onSelect: () => void }) {

@@ -68,6 +68,16 @@ The first screen should answer five questions:
 
 Freshness checking should happen on a timed cadence, on page load, or through a background worker. Manual probe controls belong in a technical or development layer.
 
+### Persona Fit For Automatic Freshness
+| Persona | Freshness job |
+| --- | --- |
+| Conservation intelligence lead | See which sources are currently usable, stale, blocked, or research-only before deciding where attention goes. |
+| Wildlife researcher or field biologist | Know whether observations and graph claims rest on current source evidence. |
+| Conservation communications lead | Avoid using claims whose source state is stale, benchmark-only, or permission-limited. |
+| Technical evaluator | Inspect how freshness was measured without making the primary screen feel like a tool console. |
+
+This story serves source coverage and evidence trust. The graph-learning surface remains a separate design decision: it may stay on the workbench, open as a deeper graph view, or live in a source detail page depending on the persona and task being tested in RAH-20.
+
 ### Primary Screen
 | Element | Placement | Reason |
 | --- | --- | --- |
@@ -86,15 +96,15 @@ Freshness checking should happen on a timed cadence, on page load, or through a 
 | Prompt version, model name, validation status | Technical trace | These are audit facts. They should be inspectable without dominating the first impression. |
 | Source adapter, headers, hashes, cadence evidence | Technical trace | Required for evidence and reproducibility. Too dense for the source wall. |
 | Full source-policy notes | Source detail or source-policy file | The UI should show the gate state; the policy reasoning belongs in the evidence trail. |
-| Manual freshness probe | Developer/admin control | Normal use should auto-poll. Manual controls are useful for demos, testing, and recovery. |
+| Manual source refresh | Developer/admin control | Normal use should auto-poll. Manual controls are useful for demos, testing, and recovery. |
 | Raw Neo4j write detail | Technical trace and tests | The primary screen should show graph growth and relationships; raw persistence belongs in trace. |
 
 ### Remove From Primary
 | Current copy or control | Replacement |
 | --- | --- |
-| `Ready for freshness probe` | `Pending first check`, `Fresh`, `Recent`, `Stale`, `Blocked`, or `Research route`, with checked time and source age when available. |
+| Probe-ready tile copy | `Pending first automatic check`, `Fresh`, `Recent`, `Stale`, `Blocked`, or `Research route`, with checked time and source age when available. |
 | `Automation posture` | Remove as a box. Represent the same idea through status: automatic source polling, graph ingestion state, and exception routing. |
-| `Find updating sources` as the main call to action | Make polling automatic. Keep a small `Refresh now` control in the technical layer if needed. |
+| Primary source-check button | Make polling automatic. Keep a small `Refresh source state` control in the technical layer if needed. |
 | `Run inference batch` as the main call to action | Show `Analyze eligible changes` only when there are eligible changed frames, or run automatically in the benchmark path. |
 | Long explanatory panel copy | Use short operating cues, source links, and detail drawers. |
 

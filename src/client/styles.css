@@ -238,6 +238,46 @@ h4 {
   text-align: right;
 }
 
+.sourceWallStatus {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-items: end;
+  max-width: 560px;
+}
+
+.sourceWallStatus span {
+  color: #9bb0a4;
+  font-size: 0.86rem;
+  text-align: right;
+}
+
+.sourceWallStatus button {
+  align-items: center;
+  background: rgba(241, 249, 239, 0.04);
+  border: 1px solid rgba(224, 241, 214, 0.2);
+  color: #dcebdc;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 760;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 11px;
+}
+
+.sourceWallStatus button:hover,
+.sourceWallStatus button:focus-visible {
+  background: rgba(241, 249, 239, 0.1);
+  border-color: rgba(216, 255, 99, 0.58);
+  outline: none;
+}
+
+.sourceWallStatus button:active {
+  transform: translateY(1px);
+}
+
 .sectionTitle.compact {
   align-items: start;
   grid-template-columns: 1fr;
@@ -622,6 +662,18 @@ h4 {
   .sectionTitle > span {
     grid-column: 1;
     grid-row: auto;
+    text-align: left;
+  }
+
+  .sourceWallStatus {
+    align-items: start;
+    grid-column: 1;
+    grid-row: auto;
+    justify-items: start;
+    max-width: none;
+  }
+
+  .sourceWallStatus span {
     text-align: left;
   }
 }

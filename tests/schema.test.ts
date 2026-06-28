@@ -19,7 +19,7 @@ describe("source and extraction schemas", () => {
     const state = seededDashboardState();
     expect(state.sourceGate.status).toBe("ready_for_probe");
     expect(state.sourceGate.label).toBe("Source freshness gate");
-    expect(state.sourceGate.detail).toContain("Find updating sources");
+    expect(state.sourceGate.detail).toContain("checks PhenoCam freshness automatically");
     expect(state.sourceGate.detail).not.toContain("NPS_API_KEY");
   });
 });

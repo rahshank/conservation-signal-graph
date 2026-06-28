@@ -86,7 +86,7 @@ export function seededDashboardState(): DashboardState {
     sourceGate: {
       status: "ready_for_probe",
       label: "Source freshness gate",
-      detail: "Use Find updating sources to check PhenoCam freshness before any Groq inference. NPS remains a separate static image benchmark."
+      detail: "Ethogram Graph checks PhenoCam freshness automatically before Groq inference. NPS remains a separate static image benchmark."
     }
   };
 }

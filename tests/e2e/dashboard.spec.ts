@@ -23,6 +23,32 @@ test("source wall opens as a multi-source intelligence surface", async ({ page }
   await expectVisualReadingOrder(page, ["Source Wall", "Intelligence Workbench", "Exception Queue", "Technical Trace"]);
 });
 
+test("freshness runs automatically for the conservation intelligence lead", async ({ page }) => {
+  const cadenceState = seededDashboardState();
+  cadenceState.sourceGate = {
+    status: "ready_for_probe",
+    label: "Fresh source candidates found",
+    detail: "1 of 1 PhenoCam sources are eligible for inference now. 1 fresh, 0 recent, 0 stale freshness, 0 unknown, 0 failed."
+  };
+
+  let probeRequests = 0;
+  await page.route("**/api/state", async (route) => {
+    await route.fulfill({ json: cadenceState });
+  });
+  await page.route("**/api/sources/probe/phenocam", async (route) => {
+    probeRequests += 1;
+    await route.fulfill({ json: phenocamProbeFixture() });
+  });
+
+  await page.goto("/");
+
+  await expect(page.getByLabel("Source wall").getByText("Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day")).toBeVisible();
+  await expect(page.getByLabel("Source wall").getByText("1 eligible source is current. 3 sources checked automatically.")).toBeVisible();
+  await expect(page.getByRole("button", { name: retiredPrimarySourceAction() })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Refresh source state" })).toBeVisible();
+  expect(probeRequests).toBe(1);
+});
+
 test("selecting a wildlife source shows research mode instead of pretending ingestion is approved", async ({ page }) => {
   await page.goto("/");
 
@@ -46,62 +72,68 @@ test("source cadence probe updates PhenoCam freshness and keeps source links vis
     await route.fulfill({ json: cadenceState });
   });
   await page.route("**/api/sources/probe/phenocam", async (route) => {
-    await route.fulfill({
-      json: {
-        results: [
-          {
-            ok: true,
-            evidence: {
-              sourceId: "phenocam:aguamarga",
-              sourceName: "aguamarga",
-              sourceType: "periodic_snapshot",
-              status: "cadence_candidate",
-              checkedAt: "2026-06-28T02:00:00.000Z",
-              latestImageUrl: "https://phenocam.nau.edu/data/latest/aguamarga.jpg",
-              sourcePageUrl: "https://phenocam.nau.edu/webcam/sites/aguamarga/",
-              locationLabel: "Grassland, Balsa Blanca, Almeria, Spain",
-              termsStatus: "permitted",
-              licenseOrTermsRef: "PhenoCam fair-use policy; CC BY 4.0 with attribution.",
-              freshnessObservation: {
-                checkedAt: "2026-06-28T05:31:23.000Z",
-                sourceReportedAt: "2026-06-28T05:25:02.000Z",
-                ageMs: 381000,
-                ageLabel: "6 min old",
-                status: "fresh",
-                basis: "last_modified",
-                expectedCadenceSeconds: 2274,
-                expectedFramesPerDay: 38,
-                includeForInference: true,
-                summary: "Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day"
-              },
-              dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
-              cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
-              recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
-            }
-          }
-        ],
-        summary: {
-          totalSources: 1,
-          cadenceCandidates: 1,
-          inferenceEligible: 1,
-          fresh: 1,
-          recent: 0,
-          staleFreshness: 0,
-          unknownFreshness: 0,
-          staleSnapshots: 0,
-          failed: 0
-        }
-      }
-    });
+    await route.fulfill({ json: phenocamProbeFixture() });
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Find updating sources" }).click();
+  await page.getByRole("button", { name: "Refresh source state" }).click();
 
   await expect(page.getByLabel("Selected source workbench").getByText("Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day")).toBeVisible();
   await expect(page.getByLabel("Technical trace").getByText("Expected ~38 RGB frames/day")).toBeVisible();
   await expect(page.getByLabel("Technical trace").getByText("707 ms")).toBeVisible();
 });
+
+function phenocamProbeFixture() {
+  return {
+    results: [
+      {
+        ok: true,
+        evidence: {
+          sourceId: "phenocam:aguamarga",
+          sourceName: "aguamarga",
+          sourceType: "periodic_snapshot",
+          status: "cadence_candidate",
+          checkedAt: "2026-06-28T02:00:00.000Z",
+          latestImageUrl: "https://phenocam.nau.edu/data/latest/aguamarga.jpg",
+          sourcePageUrl: "https://phenocam.nau.edu/webcam/sites/aguamarga/",
+          locationLabel: "Grassland, Balsa Blanca, Almeria, Spain",
+          termsStatus: "permitted",
+          licenseOrTermsRef: "PhenoCam fair-use policy; CC BY 4.0 with attribution.",
+          freshnessObservation: {
+            checkedAt: "2026-06-28T05:31:23.000Z",
+            sourceReportedAt: "2026-06-28T05:25:02.000Z",
+            ageMs: 381000,
+            ageLabel: "6 min old",
+            status: "fresh",
+            basis: "last_modified",
+            expectedCadenceSeconds: 2274,
+            expectedFramesPerDay: 38,
+            includeForInference: true,
+            summary: "Fresh: checked 1:31 AM, source image 6 min old, expected ~38 RGB frames/day"
+          },
+          dailyCounts: [{ localDate: "2026-06-26", rgbCount: 38, infraredCount: 39 }],
+          cadenceSummary: "aguamarga reported 38 RGB frames and 39 infrared frames on 2026-06-26.",
+          recommendedAction: "Eligible for timed polling and changed-frame Groq extraction."
+        }
+      }
+    ],
+    summary: {
+      totalSources: 3,
+      cadenceCandidates: 3,
+      inferenceEligible: 1,
+      fresh: 1,
+      recent: 0,
+      staleFreshness: 0,
+      unknownFreshness: 0,
+      staleSnapshots: 0,
+      failed: 0
+    }
+  };
+}
+
+function retiredPrimarySourceAction() {
+  return ["Find", "updating", "sources"].join(" ");
+}
 
 async function expectVisualReadingOrder(page: Page, headingNames: string[]) {
   const positions = [];

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 const checkedFiles = [
   "src/client/App.tsx",
   "src/client/source-wall.ts",
+  "src/server/fixtures.ts",
+  "docs/Evidence_2026-06-27.md",
   "docs/superpowers/specs/2026-06-28-source-wall-redesign.md",
   "tests/e2e/dashboard.spec.ts"
 ];
@@ -11,7 +13,10 @@ const checkedFiles = [
 const bannedPhrases = [
   ["Humans", "review", "exceptions,", "not", "every", "graph", "edge."].join(" "),
   ["not every", "graph edge"].join(" "),
-  ["manual edge", "approval"].join(" ")
+  ["manual edge", "approval"].join(" "),
+  ["Ready", "for", "freshness", "probe"].join(" "),
+  ["freshness", "probe", "ready"].join(" "),
+  ["Find", "updating", "sources"].join(" ")
 ];
 
 describe("product language guard", () => {
