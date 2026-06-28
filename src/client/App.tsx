@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Database, Eye, FileCheck, GitBranch, Image, Link, ListChecks, Play, RadioTower, RotateCw, ShieldCheck, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Database, Eye, FileCheck, GitBranch, Image, Link, ListChecks, Play, RadioTower, ShieldCheck, XCircle } from "lucide-react";
 import type { DashboardState, GraphNode, GraphRelationship } from "../shared/schema";
 import { seededDashboardState } from "../server/fixtures";
 
@@ -25,7 +25,7 @@ export function App() {
   }
 
   async function ingestFixture() {
-    setStatus("Replaying test fixture...");
+    setStatus("Loading test fixture...");
     const response = await fetch("/api/events/ingest", { method: "POST" });
     if (!response.ok) {
       setStatus(`Ingest failed: HTTP ${response.status}`);
@@ -33,7 +33,7 @@ export function App() {
     }
     setState((await response.json()) as DashboardState);
     setReviewDecision("Awaiting monitor review");
-    setStatus("Test fixture replayed");
+    setStatus("Test fixture loaded");
   }
 
   async function ingestNps() {
@@ -50,21 +50,11 @@ export function App() {
     setStatus("Bird camera analyzed");
   }
 
-  async function probeNps() {
-    setStatus("Checking bird camera source...");
-    const response = await fetch("/api/sources/probe/nps");
-    if (!response.ok) {
-      setStatus(`Source probe failed: HTTP ${response.status}`);
-      return;
-    }
-    await refreshState();
-    setStatus("Bird camera source checked");
-  }
-
   const latest = state.events[0];
   const groupedNodes = useMemo(() => groupNodesByKind(state.graph.nodes), [state.graph.nodes]);
   const latestConfidence = Math.round(latest.observation.confidence * 100);
   const isLive = latest.source.sourceType === "live_camera";
+  const currentExtractionMode = latest.observation.validationStatus === "valid" ? "groq" : "fixture";
 
   useEffect(() => {
     setReviewDecision("Awaiting monitor review");
@@ -83,14 +73,15 @@ export function App() {
         <div className="commandCluster">
           <div className="modeStrip" aria-label="Proof modes">
             <span>Source: {isLive ? "live camera" : "fixture"}</span>
-            <span>Extraction: {state.metrics.extractionMode}</span>
+            <span>Extraction: {currentExtractionMode}</span>
             <span>Graph: {state.metrics.graphMode}</span>
             <span>Validation: {latest.observation.validationStatus}</span>
           </div>
           <div className="commandActions">
-            <button onClick={probeNps} title="Check which NPS bird camera will be analyzed"><RotateCw size={16} />Check bird camera</button>
             <button className="primary" onClick={ingestNps} title="Fetch the current bird-camera frame and analyze it with Groq"><RadioTower size={16} />Analyze bird camera</button>
-            <button onClick={ingestFixture} title="Replay the cartoon fixture used for regression testing"><Play size={16} />Replay test fixture</button>
+          </div>
+          <div className="testActions" aria-label="Test controls">
+            <button onClick={ingestFixture} title="Load the fixed fixture used for regression testing"><Play size={16} />Load test fixture</button>
           </div>
         </div>
       </section>
@@ -99,7 +90,7 @@ export function App() {
         <Metric icon={<Activity size={17} />} label="Events" value={state.metrics.totalEvents.toString()} />
         <Metric icon={<RadioTower size={17} />} label="Live source" value={state.metrics.liveEvents.toString()} />
         <Metric icon={<GitBranch size={17} />} label="Graph" value={state.metrics.graphMode} />
-        <Metric icon={<Cpu size={17} />} label="Extraction" value={state.metrics.extractionMode} />
+        <Metric icon={<Cpu size={17} />} label="Current extraction" value={currentExtractionMode} />
         <Metric icon={<Database size={17} />} label="Latency" value={`${state.metrics.averageLatencyMs} ms`} />
       </section>
 
@@ -119,7 +110,7 @@ export function App() {
         <AIObservation latest={latest} latestConfidence={latestConfidence} />
         <ReviewDecision decision={reviewDecision} onDecision={setReviewDecision} />
         <ContextGraph nodes={state.graph.nodes} relationships={state.graph.relationships} />
-        <EvidenceTrace latest={latest} state={state} latestConfidence={latestConfidence} />
+        <EvidenceTrace latest={latest} state={state} latestConfidence={latestConfidence} currentExtractionMode={currentExtractionMode} />
         <SignalQueue events={state.events} status={status} groupedNodes={groupedNodes} />
       </section>
     </main>
@@ -230,10 +221,11 @@ function ContextGraph({ nodes, relationships }: { nodes: GraphNode[]; relationsh
   );
 }
 
-function EvidenceTrace({ latest, state, latestConfidence }: {
+function EvidenceTrace({ latest, state, latestConfidence, currentExtractionMode }: {
   latest: DashboardState["events"][number];
   state: DashboardState;
   latestConfidence: number;
+  currentExtractionMode: DashboardState["metrics"]["extractionMode"];
 }) {
   return (
     <section className="panel evidencePanel" aria-label="Evidence trace">
@@ -251,7 +243,7 @@ function EvidenceTrace({ latest, state, latestConfidence }: {
         <DetailItem icon={<ShieldCheck size={15} />} label="Validation" value={latest.observation.validationStatus} />
         <DetailItem icon={<Activity size={15} />} label="Confidence" value={`${latestConfidence}%`} />
         <DetailItem icon={<Database size={15} />} label="Graph mode" value={state.metrics.graphMode} />
-        <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={state.metrics.extractionMode} />
+        <DetailItem icon={<RadioTower size={15} />} label="Extraction mode" value={currentExtractionMode} />
         <DetailItem
           icon={<Link size={15} />}
           label="Source URL"

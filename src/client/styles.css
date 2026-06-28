@@ -170,6 +170,19 @@ h3 {
   justify-content: flex-end;
 }
 
+.testActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.testActions button {
+  background: transparent;
+  color: #4e5d52;
+  font-size: 0.78rem;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
 .statusRail {
   display: grid;
   gap: 10px;
@@ -663,7 +676,8 @@ h3 {
   }
 
   .modeStrip,
-  .commandActions {
+  .commandActions,
+  .testActions {
     justify-content: flex-start;
   }
 
@@ -701,12 +715,14 @@ h3 {
   }
 
   .commandActions,
+  .testActions,
   .statusRail,
   .reviewWorkspace {
     grid-template-columns: 1fr;
   }
 
-  .commandActions {
+  .commandActions,
+  .testActions {
     display: grid;
   }
 

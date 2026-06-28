@@ -20,9 +20,13 @@ test("dashboard renders seeded signal graph and can ingest another event", async
     "Evidence Trace",
     "Signal Queue"
   ]);
-  await expect(page.getByRole("button", { name: "Check bird camera" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Analyze bird camera" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Replay test fixture" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Check bird camera" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Replay test fixture" })).toHaveCount(0);
+  await expect(page.getByLabel("Test controls").getByRole("button", { name: "Load test fixture" })).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Extraction: fixture")).toBeVisible();
+  await expect(page.getByLabel("System status").getByText("Current extraction")).toBeVisible();
+  await expect(page.getByLabel("System status").getByText("fixture", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept observation" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Send to review" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Dismiss low confidence" })).toBeVisible();
@@ -46,9 +50,11 @@ test("dashboard renders seeded signal graph and can ingest another event", async
 
   await page.getByRole("button", { name: "Accept observation" }).click();
   await expect(page.getByText("Accepted as observation")).toBeVisible();
-  await page.getByRole("button", { name: "Replay test fixture" }).click();
-  await expect(page.getByText("Test fixture replayed")).toBeVisible();
+  await page.getByLabel("Test controls").getByRole("button", { name: "Load test fixture" }).click();
+  await expect(page.getByText("Test fixture loaded")).toBeVisible();
   await expect(page.getByText("Awaiting monitor review")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Source: fixture")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Extraction: fixture")).toBeVisible();
   await expect(page.getByText("Events")).toBeVisible();
 });
 
@@ -100,6 +106,88 @@ test("dashboard renders frame normalization metadata from model runs", async ({ 
   await expect(frameMetadata.getByText("261 KB")).toBeVisible();
   await expect(frameMetadata.getByText("Yes")).toBeVisible();
   await expect(frameMetadata.getByText("oversized dimensions")).toBeVisible();
+});
+
+test("analyze bird camera promotes the Groq live signal into review", async ({ page }) => {
+  const initialState = seededDashboardState();
+  const birdState = seededDashboardState();
+  birdState.events[0] = {
+    source: {
+      sourceId: "nps:peregrine-falcon",
+      sourceName: "Peregrine Falcon Webcam",
+      sourceType: "live_camera",
+      capturedAt: "2026-06-28T02:13:14.404Z",
+      imageUrl: "https://www.nps.gov/common/uploads/cropped_image/FCD71ADD-A61D-57A9-C8A70C735880F813.jpg",
+      locationLabel: "Channel Islands National Park",
+      sourcePageUrl: "https://www.nps.gov/media/webcam/view.htm?id=A3663442-C6F8-DCB7-A82C44AE5E184E64",
+      licenseOrTermsRef: "NPS API and DOI/NPS notices",
+      termsStatus: "requires_key"
+    },
+    observation: {
+      observationId: "obs-peregrine-live",
+      sourceId: "nps:peregrine-falcon",
+      frameId: "frame-peregrine-live",
+      observedAt: "2026-06-28T02:13:14.404Z",
+      speciesCandidates: [
+        {
+          label: "Peregrine Falcon",
+          confidence: 0.95,
+          evidence: "Distinctive markings, shape, and flight pattern"
+        }
+      ],
+      risks: [],
+      actions: [],
+      questions: [],
+      summary: "The image shows a Peregrine Falcon in flight.",
+      confidence: 0.95,
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      promptVersion: "csg-v0.1",
+      latencyMs: 1304,
+      validationStatus: "valid",
+      frameProcessing: {
+        originalImageUrl: "https://www.nps.gov/common/uploads/cropped_image/FCD71ADD-A61D-57A9-C8A70C735880F813.jpg",
+        originalWidth: 8640,
+        originalHeight: 5760,
+        originalBytes: 11_054_549,
+        submittedWidth: 1600,
+        submittedHeight: 1067,
+        submittedBytes: 133_007,
+        resized: true,
+        reason: "oversized_dimensions"
+      }
+    }
+  };
+  birdState.metrics = {
+    ...birdState.metrics,
+    totalEvents: 2,
+    liveEvents: 1,
+    fixtureEvents: 1,
+    averageLatencyMs: 661,
+    extractionMode: "groq"
+  };
+  birdState.sourceGate = {
+    status: "ready_for_probe",
+    label: "Bird camera analyzed",
+    detail: "Analyzed Peregrine Falcon Webcam with Groq."
+  };
+
+  await page.route("**/api/state", async (route) => {
+    await route.fulfill({ json: initialState });
+  });
+  await page.route("**/api/events/ingest/nps", async (route) => {
+    await route.fulfill({ json: birdState });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Analyze bird camera" }).click();
+
+  await expect(page.getByLabel("Live source gate").getByText("Bird camera analyzed", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Signal under review").getByText("Peregrine Falcon Webcam", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("AI observation").getByText("The image shows a Peregrine Falcon in flight.")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Source: live camera")).toBeVisible();
+  await expect(page.getByLabel("Proof modes").getByText("Extraction: groq")).toBeVisible();
+  await expect(page.getByLabel("System status").getByText("Current extraction")).toBeVisible();
+  await expect(page.getByLabel("System status").getByText("groq", { exact: true })).toBeVisible();
 });
 
 async function expectVisualReadingOrder(page: Page, headingNames: string[]) {
