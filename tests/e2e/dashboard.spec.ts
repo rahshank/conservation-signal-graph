@@ -20,6 +20,9 @@ test("dashboard renders seeded signal graph and can ingest another event", async
     "Evidence Trace",
     "Signal Queue"
   ]);
+  await expect(page.getByRole("button", { name: "Check bird camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Analyze bird camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Replay test fixture" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept observation" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Send to review" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Dismiss low confidence" })).toBeVisible();
@@ -43,8 +46,8 @@ test("dashboard renders seeded signal graph and can ingest another event", async
 
   await page.getByRole("button", { name: "Accept observation" }).click();
   await expect(page.getByText("Accepted as observation")).toBeVisible();
-  await page.getByRole("button", { name: "Fixture run" }).click();
-  await expect(page.getByText("Signal ingested")).toBeVisible();
+  await page.getByRole("button", { name: "Replay test fixture" }).click();
+  await expect(page.getByText("Test fixture replayed")).toBeVisible();
   await expect(page.getByText("Awaiting monitor review")).toBeVisible();
   await expect(page.getByText("Events")).toBeVisible();
 });

@@ -16,7 +16,7 @@ The prototype scaffold is implemented with:
 - Unit tests and Playwright smoke test
 - Source-policy, product, technical, and test docs
 
-The first live-source gate passed with the NPS Yosemite Falls webcam source. The next source proof targets Bartlett Cove Lagoon and Fairweather Range because it has stronger wildlife likelihood. Groq and Neo4j remain explicit proof gates: fixture extraction is not a Groq claim, and memory graph mode is not a Neo4j claim.
+The first source proof passed with NPS. The current test path targets the NPS Peregrine Falcon Webcam because it has a visible animal and a known species context. Groq and Neo4j remain explicit proof gates: fixture extraction is not a Groq claim, and memory graph mode is not a Neo4j claim.
 
 Secret handling and GitHub setup: [Secrets And GitHub Setup](docs/Secrets_And_GitHub_Setup.md)
 Agentic product standard: [Agentic Product Development Standard](docs/Agentic_Product_Development_Standard.md)
@@ -87,6 +87,7 @@ First verification record: [Evidence 2026-06-27](docs/Evidence_2026-06-27.md)
 - Playwright: https://playwright.dev/docs/intro
 
 ## Change log
+- 2026-06-27: Switched the default live test path to the NPS Peregrine Falcon Webcam and clarified the UI actions.
 - 2026-06-27: Added persona-led UI story and product reference research links.
 - 2026-06-27: Added Linear as the operating backlog link.
 - 2026-06-27: Added context-layer links and clarified that Bartlett Cove is the next wildlife-likelihood proof source.

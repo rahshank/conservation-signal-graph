@@ -240,10 +240,16 @@ h3 {
 }
 
 .blocked_missing_key,
+.ingest_failed,
 .fixture_only,
 .sourceBadge.fixture {
   background: #f3dcb1;
   color: #5e3a0d;
+}
+
+.ingest_failed {
+  background: #f5c4bd;
+  color: #7c241a;
 }
 
 .ready_for_probe,

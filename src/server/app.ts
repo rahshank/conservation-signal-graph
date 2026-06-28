@@ -1,18 +1,22 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { probeNpsWebcamSource } from "./adapters/nps-webcam";
+import { type ProbeResult, probeNpsWebcamSource } from "./adapters/nps-webcam";
 import { extractObservation } from "./extraction/extractor";
 import { fixtureSourceEvent } from "./fixtures";
-import { createGraphRepository } from "./graph/repository";
+import { createGraphRepository, type GraphRepository } from "./graph/repository";
 import { SignalStore } from "./state";
 import { sourceEventSchema } from "../shared/schema";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export async function createApp() {
+export async function createApp(options: {
+  graphRepository?: GraphRepository;
+  npsProbe?: () => Promise<ProbeResult>;
+} = {}) {
   const app = express();
-  const graphRepository = createGraphRepository();
+  const graphRepository = options.graphRepository ?? createGraphRepository();
+  const npsProbe = options.npsProbe ?? (() => probeNpsWebcamSource());
   const store = new SignalStore(graphRepository);
 
   app.use(express.json({ limit: "10mb" }));
@@ -34,12 +38,12 @@ export async function createApp() {
   });
 
   app.get("/api/sources/probe/nps", async (_request, response) => {
-    const result = await probeNpsWebcamSource();
+    const result = await npsProbe();
     if (result.ok) {
       store.setSourceGate({
         status: "ready_for_probe",
-        label: "NPS webcam source ready",
-        detail: `Found ${result.source.sourceName}. A live ingestion run can use this source.`
+        label: "Bird camera source ready",
+        detail: `Found ${result.source.sourceName}. Use Analyze bird camera to run Groq on the current frame.`
       });
     } else {
       store.setSourceGate({
@@ -69,19 +73,25 @@ export async function createApp() {
 
   app.post("/api/events/ingest/nps", async (_request, response, next) => {
     try {
-      const result = await probeNpsWebcamSource();
+      const result = await npsProbe();
       if (!result.ok) {
         response.status(400).json(result);
         return;
       }
+      const observation = await extractObservation(result.source);
+      await store.add(result.source, observation);
       store.setSourceGate({
         status: "ready_for_probe",
-        label: "NPS webcam source ready",
-        detail: `Ingested ${result.source.sourceName} as a live source. Extraction remains in ${process.env.CSG_FORCE_FIXTURE === "1" ? "fixture" : "model"} mode.`
+        label: "Bird camera analyzed",
+        detail: `Analyzed ${result.source.sourceName} with ${observation.validationStatus === "valid" ? "Groq" : "fixture extraction"}.`
       });
-      const observation = await extractObservation(result.source);
-      response.json(await store.add(result.source, observation));
+      response.json(await store.snapshot());
     } catch (error) {
+      store.setSourceGate({
+        status: "ingest_failed",
+        label: "Live source ingest failed",
+        detail: error instanceof Error ? error.message : String(error)
+      });
       next(error);
     }
   });

@@ -16,6 +16,8 @@ export type ProbeResult =
   | { ok: true; source: SourceEvent }
   | { ok: false; status: "missing_key" | "no_camera" | "fetch_failed"; detail: string };
 
+export const defaultNpsWebcamTitle = "Peregrine Falcon";
+
 export async function probeNpsWebcamSource(options: {
   apiKey?: string;
   parkCode?: string;
@@ -24,9 +26,9 @@ export async function probeNpsWebcamSource(options: {
   fetchImpl?: typeof fetch;
 } = {}): Promise<ProbeResult> {
   const apiKey = options.apiKey ?? process.env.NPS_API_KEY;
-  const parkCode = options.parkCode ?? process.env.NPS_PARK_CODE ?? "yell";
   const webcamId = options.webcamId ?? process.env.NPS_WEBCAM_ID;
-  const titleIncludes = options.titleIncludes ?? process.env.NPS_WEBCAM_TITLE;
+  const titleIncludes = options.titleIncludes ?? process.env.NPS_WEBCAM_TITLE ?? defaultNpsWebcamTitle;
+  const parkCode = options.parkCode ?? (webcamId || titleIncludes ? undefined : process.env.NPS_PARK_CODE ?? "yell");
   const fetchImpl = options.fetchImpl ?? fetch;
 
   if (!apiKey) {

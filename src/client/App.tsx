@@ -25,7 +25,7 @@ export function App() {
   }
 
   async function ingestFixture() {
-    setStatus("Ingesting signal...");
+    setStatus("Replaying test fixture...");
     const response = await fetch("/api/events/ingest", { method: "POST" });
     if (!response.ok) {
       setStatus(`Ingest failed: HTTP ${response.status}`);
@@ -33,30 +33,32 @@ export function App() {
     }
     setState((await response.json()) as DashboardState);
     setReviewDecision("Awaiting monitor review");
-    setStatus("Signal ingested");
+    setStatus("Test fixture replayed");
   }
 
   async function ingestNps() {
-    setStatus("Ingesting NPS source...");
+    setStatus("Analyzing bird camera with Groq...");
     const response = await fetch("/api/events/ingest/nps", { method: "POST" });
     if (!response.ok) {
       const body = await response.json().catch(() => null);
-      setStatus(body?.detail ? `NPS ingest blocked: ${body.detail}` : `NPS ingest failed: HTTP ${response.status}`);
+      await refreshState();
+      setStatus(body?.detail ? `Bird camera analysis failed: ${body.detail}` : `Bird camera analysis failed: HTTP ${response.status}`);
       return;
     }
     setState((await response.json()) as DashboardState);
     setReviewDecision("Awaiting monitor review");
-    setStatus("NPS source ingested");
+    setStatus("Bird camera analyzed");
   }
 
   async function probeNps() {
-    setStatus("Checking NPS webcam source...");
+    setStatus("Checking bird camera source...");
     const response = await fetch("/api/sources/probe/nps");
     if (!response.ok) {
       setStatus(`Source probe failed: HTTP ${response.status}`);
       return;
     }
     await refreshState();
+    setStatus("Bird camera source checked");
   }
 
   const latest = state.events[0];
@@ -86,9 +88,9 @@ export function App() {
             <span>Validation: {latest.observation.validationStatus}</span>
           </div>
           <div className="commandActions">
-            <button onClick={probeNps}><RotateCw size={16} />Probe</button>
-            <button onClick={ingestNps}><RadioTower size={16} />Ingest NPS</button>
-            <button className="primary" onClick={ingestFixture}><Play size={16} />Fixture run</button>
+            <button onClick={probeNps} title="Check which NPS bird camera will be analyzed"><RotateCw size={16} />Check bird camera</button>
+            <button className="primary" onClick={ingestNps} title="Fetch the current bird-camera frame and analyze it with Groq"><RadioTower size={16} />Analyze bird camera</button>
+            <button onClick={ingestFixture} title="Replay the cartoon fixture used for regression testing"><Play size={16} />Replay test fixture</button>
           </div>
         </div>
       </section>
@@ -109,7 +111,7 @@ export function App() {
           <p>{state.sourceGate.detail}</p>
           </div>
         </div>
-        <span className={`pill ${state.sourceGate.status}`}>{state.sourceGate.status.replace(/_/g, " ")}</span>
+        <span className={`pill ${state.sourceGate.status}`}>{displayGateStatus(state.sourceGate.status)}</span>
       </section>
 
       <section className="workspace reviewWorkspace" aria-label="Monitoring workspace">
@@ -419,6 +421,16 @@ function formatBytes(value: number) {
 
 function formatDimensions(width: number, height: number) {
   return `${width} x ${height}`;
+}
+
+function displayGateStatus(status: DashboardState["sourceGate"]["status"]) {
+  const labels: Record<DashboardState["sourceGate"]["status"], string> = {
+    blocked_missing_key: "missing key",
+    fixture_only: "fixture only",
+    ingest_failed: "failed",
+    ready_for_probe: "ready"
+  };
+  return labels[status];
 }
 
 function groupNodesByKind(nodes: GraphNode[]): Partial<Record<GraphNode["kind"], GraphNode[]>> {

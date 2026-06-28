@@ -113,7 +113,7 @@ export type DashboardState = {
   graph: GraphSnapshot;
   metrics: SignalMetrics;
   sourceGate: {
-    status: "blocked_missing_key" | "ready_for_probe" | "fixture_only";
+    status: "blocked_missing_key" | "ready_for_probe" | "fixture_only" | "ingest_failed";
     label: string;
     detail: string;
   };
